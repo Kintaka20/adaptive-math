@@ -53,6 +53,8 @@ export default function LearningPathPage() {
                     })
 
                     quizzes.forEach((q: any) => {
+                        if (q.type === 'REMEDIAL') return;
+                        
                         let qStatus: CombinedLesson['status'] = 'in_progress'
                         if (q.isPassed) qStatus = 'completed'
                         else if (q.isFailed) qStatus = 'failed'
