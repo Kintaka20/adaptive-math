@@ -146,9 +146,9 @@ router.get('/learning-path', authMiddleware, roleMiddleware('STUDENT'), async (r
 
       const quizzes = await Promise.all(cc.chapter.quizzes.map(async (q) => {
         const attempts = student.quizAttempts.filter(a => a.quizId === q.id)
-        const isPassed = passedQuizIds.has(q.id)
+        let isPassed = passedQuizIds.has(q.id)
         const hasAttempted = attempts.length > 0
-        const isFailed = hasAttempted && !isPassed
+        let isFailed = hasAttempted && !isPassed
         const bestScore = Math.max(0, ...attempts.map(a => a.score))
 
         let remedialQuizId: string | null = null
@@ -163,13 +163,20 @@ router.get('/learning-path', authMiddleware, roleMiddleware('STUDENT'), async (r
             orderBy: { createdAt: 'desc' },
             select: { id: true, title: true },
           })
-          if (remedialQuiz) remedialQuizId = remedialQuiz.id
+          if (remedialQuiz) {
+            remedialQuizId = remedialQuiz.id
+            if (passedQuizIds.has(remedialQuiz.id)) {
+              isPassed = true
+              isFailed = false
+            }
+          }
         }
 
         return {
           ...q,
           isPassed,
           isFailed,
+          isRemedialPassed: isPassed && passedQuizIds.has(remedialQuizId || ''),
           hasAttempted,
           bestScore,
           remedialQuizId,

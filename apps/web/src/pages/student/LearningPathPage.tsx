@@ -10,6 +10,7 @@ type CombinedLesson = {
     quizType?: string
     score?: number
     remedialQuizId?: string | null
+    isRemedialPassed?: boolean
 }
 
 type PathChapter = {
@@ -68,6 +69,7 @@ export default function LearningPathPage() {
                             quizType: q.type,
                             score: q.bestScore,
                             remedialQuizId: q.remedialQuizId || null,
+                            isRemedialPassed: q.isRemedialPassed,
                         })
                     })
 
@@ -361,6 +363,23 @@ export default function LearningPathPage() {
                                         {lesson.status === 'failed' && !lesson.remedialQuizId && (
                                             <div className="ml-11 p-3 rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700">
                                                 <p className="text-sm text-red-600 dark:text-red-400">Skor: {lesson.score}% — Kerjakan kuis lagi untuk generate remedial otomatis.</p>
+                                            </div>
+                                        )}
+                                        {lesson.status === 'completed' && lesson.isRemedialPassed && (
+                                            <div className="ml-11 flex items-center gap-2 p-3 rounded-xl bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-900/20 dark:to-teal-900/20 border border-emerald-200 dark:border-emerald-700">
+                                                <div className="size-8 rounded-full bg-emerald-500 text-white flex items-center justify-center">
+                                                    <span className="material-symbols-outlined text-sm">check_circle</span>
+                                                </div>
+                                                <div className="flex-1">
+                                                    <p className="font-medium text-emerald-900 dark:text-emerald-200 text-sm">Remedial Lulus</p>
+                                                    <p className="text-xs text-emerald-600 dark:text-emerald-400">Kamu telah memperbaiki nilai kuis ini.</p>
+                                                </div>
+                                                <Link
+                                                    to={`/siswa/quiz/${lesson.remedialQuizId}/result`}
+                                                    className="bg-emerald-100 hover:bg-emerald-200 text-emerald-700 px-3 py-1.5 rounded-lg text-sm font-bold transition-colors"
+                                                >
+                                                    Lihat Hasil
+                                                </Link>
                                             </div>
                                         )}
                                         </div>
