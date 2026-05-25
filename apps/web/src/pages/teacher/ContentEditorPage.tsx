@@ -223,7 +223,7 @@ export default function ContentEditorPage() {
                         {materialMode === 'import' && (
                             <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-6">
                                 <h3 className="font-bold mb-4">Pilih Materi dari Bank</h3>
-                                <div className="space-y-3">
+                                <div className="space-y-3 max-h-[500px] overflow-y-auto pr-2">
                                     {bankMaterials.map(m => (
                                         <label key={m.id} className={`flex items-center gap-3 p-4 rounded-xl border cursor-pointer transition-colors ${selectedMaterial === m.id ? 'border-purple-500 bg-purple-50' : 'border-slate-200 hover:bg-slate-50'}`}>
                                             <input type="radio" name="material" value={m.id} checked={selectedMaterial === m.id} onChange={() => setSelectedMaterial(m.id)} className="w-4 h-4 text-purple-600" />
@@ -274,7 +274,7 @@ export default function ContentEditorPage() {
                         {quizMode === 'import' && (
                             <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-6">
                                 <h3 className="font-bold mb-4">Pilih Soal dari Bank</h3>
-                                <div className="space-y-3">
+                                <div className="space-y-3 max-h-[500px] overflow-y-auto pr-2">
                                     {bankQuestions.map(q => (
                                         <label key={q.id} className={`flex items-start gap-3 p-4 rounded-xl border cursor-pointer transition-colors ${selectedQuestions.includes(q.id) ? 'border-amber-500 bg-amber-50' : 'border-slate-200 hover:bg-slate-50'}`}>
                                             <input type="checkbox" checked={selectedQuestions.includes(q.id)} onChange={() => toggleSelectQuestion(q.id)} className="w-4 h-4 mt-1 text-amber-600 rounded" />
