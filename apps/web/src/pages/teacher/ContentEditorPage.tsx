@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { materialApi, quizApi, questionApi, classApi } from '../../lib/api'
+import { materialApi, quizApi, questionApi, classApi, adminApi } from '../../lib/api'
 import LatexRenderer from '../../components/LatexRenderer'
 
 interface Chapter {
@@ -64,6 +64,7 @@ export default function ContentEditorPage() {
     const [selectedMaterial, setSelectedMaterial] = useState<string>('')
     const [previewQuestion, setPreviewQuestion] = useState<Question | null>(null)
     const [questionFilter, setQuestionFilter] = useState({ chapter: '', difficulty: '' })
+    const [allChapters, setAllChapters] = useState<any[]>([])
 
     useEffect(() => {
         const loadInitialData = async () => {
@@ -76,13 +77,15 @@ export default function ContentEditorPage() {
                 }
                 
                 // Load bank data for import modes
-                const [qs, ms] = await Promise.all([
+                const [qs, ms, chs] = await Promise.all([
                     questionApi.list(),
-                    materialApi.list()
+                    materialApi.list(),
+                    adminApi.chapters()
                 ])
                 
                 setBankQuestions(qs as unknown as Question[])
                 setBankMaterials(ms as unknown as Material[])
+                setAllChapters(chs as any[])
             } catch (err) {
                 console.error('Failed to load data:', err)
             }
@@ -304,7 +307,7 @@ export default function ContentEditorPage() {
                                             className="px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-sm flex-1 sm:flex-none"
                                         >
                                             <option value="">Semua Bab</option>
-                                            {Array.from(new Set(bankQuestions.map(q => q.chapter?.name).filter(Boolean))).map(chapterName => (
+                                            {Array.from(new Set(bankQuestions.map(q => allChapters.find(c => c.id === q.chapterId)?.name).filter(Boolean))).map(chapterName => (
                                                 <option key={chapterName as string} value={chapterName as string}>{chapterName as string}</option>
                                             ))}
                                         </select>
@@ -322,17 +325,20 @@ export default function ContentEditorPage() {
                                 </div>
                                 <div className="space-y-3 max-h-[500px] overflow-y-auto pr-2">
                                     {bankQuestions.filter(q => {
-                                        if (questionFilter.chapter && q.chapter?.name !== questionFilter.chapter) return false;
+                                        const chapterName = allChapters.find(c => c.id === q.chapterId)?.name;
+                                        if (questionFilter.chapter && chapterName !== questionFilter.chapter) return false;
                                         if (questionFilter.difficulty && q.difficulty !== questionFilter.difficulty) return false;
                                         return true;
-                                    }).map(q => (
+                                    }).map(q => {
+                                        const chapterName = allChapters.find(c => c.id === q.chapterId)?.name;
+                                        return (
                                         <label key={q.id} className={`flex items-start gap-3 p-4 rounded-xl border cursor-pointer transition-colors ${selectedQuestions.includes(q.id) ? 'border-amber-500 bg-amber-50' : 'border-slate-200 hover:bg-slate-50'}`}>
                                             <input type="checkbox" checked={selectedQuestions.includes(q.id)} onChange={() => toggleSelectQuestion(q.id)} className="w-4 h-4 mt-1 text-amber-600 rounded" />
                                             <div className="flex-1">
                                                 <LatexRenderer content={q.text} />
                                                 <div className="flex gap-2 mt-2">
                                                     <span className="text-xs px-2 py-1 bg-slate-100 rounded-md text-slate-600">{q.difficulty}</span>
-                                                    <span className="text-xs px-2 py-1 bg-slate-100 rounded-md text-slate-600">{q.chapter?.name}</span>
+                                                    {chapterName && <span className="text-xs px-2 py-1 bg-slate-100 rounded-md text-slate-600">{chapterName}</span>}
                                                 </div>
                                             </div>
                                             <button 
@@ -348,7 +354,7 @@ export default function ContentEditorPage() {
                                                 <span className="material-symbols-outlined text-sm">visibility</span>
                                             </button>
                                         </label>
-                                    ))}
+                                    )})}
                                 </div>
                             </div>
                         )}
