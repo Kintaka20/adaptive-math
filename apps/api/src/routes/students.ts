@@ -158,6 +158,7 @@ router.get('/learning-path', authMiddleware, roleMiddleware('STUDENT'), async (r
               chapterId: cc.chapter.id,
               type: 'REMEDIAL',
               status: 'PUBLISHED',
+              title: { contains: q.title },
             },
             orderBy: { createdAt: 'desc' },
             select: { id: true, title: true },
