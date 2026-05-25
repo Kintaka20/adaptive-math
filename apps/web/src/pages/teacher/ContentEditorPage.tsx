@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { materialApi, quizApi, questionApi, classApi, adminApi } from '../../lib/api'
 import LatexRenderer from '../../components/LatexRenderer'
 
@@ -30,6 +30,8 @@ interface Material {
 export default function ContentEditorPage() {
     const { id: classId } = useParams()
     const navigate = useNavigate()
+    const [searchParams] = useSearchParams()
+    const initialChapterId = searchParams.get('chapterId') || ''
     
     const [chapters, setChapters] = useState<Chapter[]>([])
     const [contentType, setContentType] = useState<'material' | 'quiz'>('material')
@@ -43,7 +45,7 @@ export default function ContentEditorPage() {
     const [materialData, setMaterialData] = useState({
         title: '',
         content: '',
-        chapterId: '',
+        chapterId: initialChapterId,
         duration: '',
         videoUrl: ''
     })
@@ -51,7 +53,7 @@ export default function ContentEditorPage() {
     const [quizData, setQuizData] = useState({
         title: '',
         description: '',
-        chapterId: '',
+        chapterId: initialChapterId,
         passingScore: 70,
         timeLimit: 60,
         type: 'PRACTICE'
@@ -86,6 +88,14 @@ export default function ContentEditorPage() {
                 setBankQuestions(qs as unknown as Question[])
                 setBankMaterials(ms as unknown as Material[])
                 setAllChapters(chs as any[])
+                
+                // If initialChapterId is present, try to automatically set the filter
+                if (initialChapterId) {
+                    const matchedChapter = (chs as any[]).find(c => c.id === initialChapterId)
+                    if (matchedChapter) {
+                        setQuestionFilter(prev => ({ ...prev, chapter: matchedChapter.name }))
+                    }
+                }
             } catch (err) {
                 console.error('Failed to load data:', err)
             }
@@ -233,7 +243,9 @@ export default function ContentEditorPage() {
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Bab *</label>
-                                    <select required value={materialData.chapterId} onChange={(e) => setMaterialData({ ...materialData, chapterId: e.target.value })} className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900">
+                                    <select required value={materialData.chapterId} onChange={(e) => {
+                                    setMaterialData({ ...materialData, chapterId: e.target.value })
+                                }} className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900">
                                         <option value="">Pilih Bab</option>
                                         {chapters.map(ch => <option key={ch.id} value={ch.id}>{ch.name}</option>)}
                                     </select>
@@ -289,7 +301,16 @@ export default function ContentEditorPage() {
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Bab *</label>
-                                <select required value={quizData.chapterId} onChange={(e) => setQuizData({ ...quizData, chapterId: e.target.value })} className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900">
+                                <select required value={quizData.chapterId} onChange={(e) => {
+                                    const newChapterId = e.target.value;
+                                    setQuizData({ ...quizData, chapterId: newChapterId });
+                                    const matched = chapters.find(c => c.id === newChapterId);
+                                    if (matched) {
+                                        setQuestionFilter(prev => ({ ...prev, chapter: matched.name }));
+                                    } else {
+                                        setQuestionFilter(prev => ({ ...prev, chapter: '' }));
+                                    }
+                                }} className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900">
                                     <option value="">Pilih Bab</option>
                                     {chapters.map(ch => <option key={ch.id} value={ch.id}>{ch.name}</option>)}
                                 </select>

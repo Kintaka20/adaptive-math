@@ -348,7 +348,7 @@ export default function KelasDetailPage() {
                                         <p className="text-sm text-slate-500">Atur urutan konten pembelajaran</p>
                                     </div>
                                     <Link
-                                        to={`/guru/kelas/${id}/content/create`}
+                                        to={`/guru/kelas/${id}/content/create?chapterId=${selectedChapter.id}`}
                                         className="bg-primary text-white font-medium px-4 py-2 rounded-xl flex items-center gap-2"
                                     >
                                         <span className="material-symbols-outlined text-sm">add</span>
@@ -361,7 +361,7 @@ export default function KelasDetailPage() {
                                         <span className="material-symbols-outlined text-5xl text-slate-300 mb-4">inbox</span>
                                         <p className="text-slate-500">Belum ada konten di bab ini</p>
                                         <Link
-                                            to={`/guru/kelas/${id}/content/create`}
+                                            to={`/guru/kelas/${id}/content/create?chapterId=${selectedChapter.id}`}
                                             className="mt-4 text-primary font-medium hover:underline inline-block"
                                         >
                                             + Tambah konten pertama
