@@ -63,6 +63,7 @@ export default function ContentEditorPage() {
     const [selectedQuestions, setSelectedQuestions] = useState<string[]>([])
     const [selectedMaterial, setSelectedMaterial] = useState<string>('')
     const [previewQuestion, setPreviewQuestion] = useState<Question | null>(null)
+    const [questionFilter, setQuestionFilter] = useState({ chapter: '', difficulty: '' })
 
     useEffect(() => {
         const loadInitialData = async () => {
@@ -294,9 +295,37 @@ export default function ContentEditorPage() {
 
                         {quizMode === 'import' && (
                             <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-6">
-                                <h3 className="font-bold mb-4">Pilih Soal dari Bank</h3>
+                                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
+                                    <h3 className="font-bold">Pilih Soal dari Bank</h3>
+                                    <div className="flex gap-2 w-full sm:w-auto">
+                                        <select 
+                                            value={questionFilter.chapter}
+                                            onChange={(e) => setQuestionFilter({ ...questionFilter, chapter: e.target.value })}
+                                            className="px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-sm flex-1 sm:flex-none"
+                                        >
+                                            <option value="">Semua Bab</option>
+                                            {Array.from(new Set(bankQuestions.map(q => q.chapter?.name).filter(Boolean))).map(chapterName => (
+                                                <option key={chapterName as string} value={chapterName as string}>{chapterName as string}</option>
+                                            ))}
+                                        </select>
+                                        <select 
+                                            value={questionFilter.difficulty}
+                                            onChange={(e) => setQuestionFilter({ ...questionFilter, difficulty: e.target.value })}
+                                            className="px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-sm flex-1 sm:flex-none"
+                                        >
+                                            <option value="">Semua Kesulitan</option>
+                                            <option value="EASY">Mudah</option>
+                                            <option value="MEDIUM">Sedang</option>
+                                            <option value="HARD">Sulit</option>
+                                        </select>
+                                    </div>
+                                </div>
                                 <div className="space-y-3 max-h-[500px] overflow-y-auto pr-2">
-                                    {bankQuestions.map(q => (
+                                    {bankQuestions.filter(q => {
+                                        if (questionFilter.chapter && q.chapter?.name !== questionFilter.chapter) return false;
+                                        if (questionFilter.difficulty && q.difficulty !== questionFilter.difficulty) return false;
+                                        return true;
+                                    }).map(q => (
                                         <label key={q.id} className={`flex items-start gap-3 p-4 rounded-xl border cursor-pointer transition-colors ${selectedQuestions.includes(q.id) ? 'border-amber-500 bg-amber-50' : 'border-slate-200 hover:bg-slate-50'}`}>
                                             <input type="checkbox" checked={selectedQuestions.includes(q.id)} onChange={() => toggleSelectQuestion(q.id)} className="w-4 h-4 mt-1 text-amber-600 rounded" />
                                             <div className="flex-1">
