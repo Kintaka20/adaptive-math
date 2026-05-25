@@ -165,8 +165,23 @@ export default function ContentEditorPage() {
                 </div>
             )}
 
-            <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-6">
-                <h2 className="font-bold text-slate-900 dark:text-white mb-4">Pilih Jenis Konten</h2>
+            {chapters.length === 0 && !isLoading && (
+                <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 p-6 rounded-2xl text-center">
+                    <span className="material-symbols-outlined text-4xl text-amber-500 mb-2">warning</span>
+                    <h2 className="text-lg font-bold text-slate-900 dark:text-white mb-2">Belum Ada Bab</h2>
+                    <p className="text-slate-600 dark:text-slate-400 mb-4">
+                        Anda tidak dapat membuat konten karena kelas ini belum memiliki bab. Silakan tambahkan bab terlebih dahulu.
+                    </p>
+                    <Link to={`/guru/kelas/${classId}`} className="inline-block px-6 py-2.5 bg-amber-500 hover:bg-amber-600 text-white font-medium rounded-xl transition-colors">
+                        Kembali ke Kelas
+                    </Link>
+                </div>
+            )}
+
+            {chapters.length > 0 && (
+                <>
+                    <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-6">
+                        <h2 className="font-bold text-slate-900 dark:text-white mb-4">Pilih Jenis Konten</h2>
                 <div className="grid grid-cols-2 gap-4">
                     <button
                         onClick={() => setContentType('material')}
@@ -320,6 +335,8 @@ export default function ContentEditorPage() {
                     </button>
                 </div>
             </form>
+            </>
+            )}
 
             {/* Question Preview Modal */}
             {previewQuestion && (
