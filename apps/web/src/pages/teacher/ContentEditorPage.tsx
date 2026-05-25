@@ -28,7 +28,7 @@ interface Material {
 }
 
 export default function ContentEditorPage() {
-    const { classId } = useParams()
+    const { id: classId } = useParams()
     const navigate = useNavigate()
     
     const [chapters, setChapters] = useState<Chapter[]>([])
