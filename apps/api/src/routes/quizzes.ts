@@ -504,12 +504,16 @@ router.post(
 )
 
 router.get(
-  '/attempts/:attemptId',
+  '/:id/result',
   authMiddleware,
   async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
-      const attempt = await prisma.quizAttempt.findUnique({
-        where: { id: req.params.attemptId },
+      const student = await prisma.student.findUnique({ where: { userId: req.user!.userId } })
+      if (!student) throw createError('Profile siswa tidak ditemukan', 404)
+
+      const attempt = await prisma.quizAttempt.findFirst({
+        where: { quizId: req.params.id, studentId: student.id, submittedAt: { not: null } },
+        orderBy: { submittedAt: 'desc' },
         include: {
           quiz: {
             include: {
@@ -527,13 +531,6 @@ router.get(
       })
 
       if (!attempt) throw createError('Hasil kuis tidak ditemukan', 404)
-
-      if (req.user!.role === 'STUDENT') {
-        const student = await prisma.student.findUnique({ where: { userId: req.user!.userId } })
-        if (!student || attempt.studentId !== student.id) {
-          throw createError('Akses ditolak', 403)
-        }
-      }
 
       const totalQ = attempt.answers.length || 1
       const avgTime = attempt.timeSpent / totalQ

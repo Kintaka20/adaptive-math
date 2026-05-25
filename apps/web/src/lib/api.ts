@@ -130,7 +130,7 @@ export const quizApi = {
     start: (id: string) => api.post<import('./types').QuizAttempt>(`/quizzes/${id}/start`, {}),
     submit: (id: string, data: { timeSpent: number; answers: { questionId: string; selectedOption: string; timeSpent?: number }[] }) =>
         api.post<import('./types').QuizAttempt>(`/quizzes/${id}/submit`, data),
-    getResult: (attemptId: string) => api.get<import('./types').QuizAttempt>(`/quizzes/attempts/${attemptId}`),
+    getResult: (id: string) => api.get<import('./types').QuizAttempt>(`/quizzes/${id}/result`),
     myAttempts: (quizId?: string) => {
         const q = quizId ? `?quizId=${quizId}` : ''
         return api.get<import('./types').QuizAttempt[]>(`/quizzes/attempts${q}`)
