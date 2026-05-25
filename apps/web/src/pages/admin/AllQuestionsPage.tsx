@@ -323,7 +323,7 @@ export default function AllQuestionsPage() {
                         </div>
 
                         <div className="flex items-center gap-2 mb-4">
-                            <span className="px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-600 rounded-lg text-xs font-medium">Kelas {previewQuestion.grade || '-'}</span>
+                            <span className="px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-600 rounded-lg text-xs font-medium">{chapters.find(c => c.id === previewQuestion.chapterId)?.name || previewQuestion.chapterId || '-'}</span>
                             {getDifficultyBadge(previewQuestion.difficulty)}
                             {previewQuestion.isSystem ? (
                                 <span className="px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-600 text-xs font-medium rounded-full">🏛️ Sistem</span>
@@ -333,7 +333,7 @@ export default function AllQuestionsPage() {
                         </div>
 
                         {/* Question Text */}
-                        <div className="bg-slate-50 dark:bg-slate-700/30 rounded-xl p-4 mb-4 border border-slate-200 dark:border-slate-600">
+                        <div className="bg-slate-50 dark:bg-slate-700/30 rounded-xl p-4 mb-4 border border-slate-200 dark:border-slate-600 overflow-x-auto">
                             <p className="text-xs font-medium text-slate-500 mb-2">SOAL</p>
                             <div className="text-slate-900 dark:text-white">
                                 <LatexRenderer content={previewQuestion.text} />
@@ -359,7 +359,7 @@ export default function AllQuestionsPage() {
                                                 ? 'bg-emerald-500 text-white'
                                                 : 'bg-slate-200 dark:bg-slate-600 text-slate-600 dark:text-slate-300'
                                         }`}>{opt.label}</span>
-                                        <div className="flex-1 text-sm text-slate-700 dark:text-slate-300">
+                                        <div className="flex-1 overflow-x-auto text-sm text-slate-700 dark:text-slate-300">
                                             <LatexRenderer content={opt.text} />
                                         </div>
                                         {opt.isCorrect && <span className="material-symbols-outlined text-emerald-500 text-sm flex-shrink-0">check_circle</span>}

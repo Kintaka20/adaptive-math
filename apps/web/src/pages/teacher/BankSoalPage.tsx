@@ -209,7 +209,7 @@ export default function BankSoalPage() {
                                         <td className="px-6 py-4 text-sm text-slate-500">#{q.id.substring(q.id.length - 4).toUpperCase()}</td>
                                         <td className="px-6 py-4">
                                             <span className="px-2 py-1 bg-slate-100 dark:bg-slate-700 rounded-lg text-sm text-slate-700 dark:text-slate-300">
-                                                {(q as any).chapter?.name || q.chapterId || 'Uncategorized'}
+                                                {chapters.find(c => c.id === q.chapterId)?.name || q.chapterId || 'Uncategorized'}
                                             </span>
                                         </td>
                                         <td className="px-6 py-4 max-w-xs">
@@ -314,11 +314,11 @@ export default function BankSoalPage() {
                         </div>
                         <div className="p-6 space-y-4">
                             <div className="flex flex-wrap gap-2">
-                                {selectedQuestion.chapterId && <span className="px-3 py-1 bg-slate-100 dark:bg-slate-700 rounded-lg text-sm">{(selectedQuestion as any).chapter?.name || selectedQuestion.chapterId}</span>}
+                                {selectedQuestion.chapterId && <span className="px-3 py-1 bg-slate-100 dark:bg-slate-700 rounded-lg text-sm">{chapters.find(c => c.id === selectedQuestion.chapterId)?.name || selectedQuestion.chapterId}</span>}
                                 {getDifficultyBadge(selectedQuestion.difficulty.toLowerCase())}
                                 {selectedQuestion.isSystem && <span className="px-3 py-1 bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 rounded-lg text-sm flex items-center gap-1"><span className="material-symbols-outlined text-[14px]">verified</span> System</span>}
                             </div>
-                            <div className="bg-slate-50 dark:bg-slate-900 rounded-xl p-4">
+                            <div className="bg-slate-50 dark:bg-slate-900 rounded-xl p-4 overflow-x-auto">
                                 <div className="text-slate-900 dark:text-white font-medium"><LatexRenderer content={selectedQuestion.text} /></div>
                             </div>
                             
@@ -331,7 +331,7 @@ export default function BankSoalPage() {
                                                 <div className={`mt-0.5 size-6 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 ${opt.isCorrect ? 'bg-emerald-500 text-white' : 'bg-slate-100 text-slate-500 dark:bg-slate-700 dark:text-slate-400'}`}>
                                                     {String.fromCharCode(65 + idx)}
                                                 </div>
-                                                <div className={opt.isCorrect ? 'text-emerald-900 dark:text-emerald-100 font-medium' : 'text-slate-700 dark:text-slate-300'}>
+                                                <div className={`flex-1 overflow-x-auto ${opt.isCorrect ? 'text-emerald-900 dark:text-emerald-100 font-medium' : 'text-slate-700 dark:text-slate-300'}`}>
                                                     <LatexRenderer content={opt.text} />
                                                 </div>
                                                 {opt.isCorrect && <span className="material-symbols-outlined text-emerald-500 ml-auto">check_circle</span>}
