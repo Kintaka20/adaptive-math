@@ -47,7 +47,6 @@ router.get('/', authMiddleware, roleMiddleware('TEACHER', 'ADMIN'), async (req: 
       include: {
         options: true,
         createdBy: { select: { user: { select: { name: true } } } },
-        chapter: { select: { name: true } },
       },
     })
 
