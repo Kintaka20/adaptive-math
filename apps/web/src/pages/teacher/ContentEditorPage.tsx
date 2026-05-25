@@ -13,6 +13,11 @@ interface Question {
     text: string
     difficulty: string
     chapter?: { name: string }
+    chapterId?: string
+    grade?: string
+    isSystem?: boolean
+    options?: { id: string, text: string, isCorrect: boolean, label: string }[]
+    explanation?: string
 }
 
 interface Material {
@@ -57,6 +62,7 @@ export default function ContentEditorPage() {
     const [bankMaterials, setBankMaterials] = useState<Material[]>([])
     const [selectedQuestions, setSelectedQuestions] = useState<string[]>([])
     const [selectedMaterial, setSelectedMaterial] = useState<string>('')
+    const [previewQuestion, setPreviewQuestion] = useState<Question | null>(null)
 
     useEffect(() => {
         const loadInitialData = async () => {
@@ -285,6 +291,18 @@ export default function ContentEditorPage() {
                                                     <span className="text-xs px-2 py-1 bg-slate-100 rounded-md text-slate-600">{q.chapter?.name}</span>
                                                 </div>
                                             </div>
+                                            <button 
+                                                type="button"
+                                                onClick={(e) => {
+                                                    e.preventDefault();
+                                                    e.stopPropagation();
+                                                    setPreviewQuestion(q);
+                                                }}
+                                                className="p-2 text-slate-400 hover:text-primary hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
+                                                title="Lihat Detail Soal"
+                                            >
+                                                <span className="material-symbols-outlined text-sm">visibility</span>
+                                            </button>
                                         </label>
                                     ))}
                                 </div>
@@ -302,6 +320,96 @@ export default function ContentEditorPage() {
                     </button>
                 </div>
             </form>
+
+            {/* Question Preview Modal */}
+            {previewQuestion && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                    <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setPreviewQuestion(null)} />
+                    <div className="relative bg-white dark:bg-slate-800 rounded-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
+                        <div className="sticky top-0 bg-white dark:bg-slate-800 p-4 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between z-10">
+                            <h3 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                                <span className="material-symbols-outlined text-primary">visibility</span>
+                                Detail Soal
+                            </h3>
+                            <button
+                                onClick={() => setPreviewQuestion(null)}
+                                className="p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-xl transition-colors"
+                            >
+                                <span className="material-symbols-outlined text-slate-500">close</span>
+                            </button>
+                        </div>
+
+                        <div className="p-6">
+                            <div className="flex items-center gap-2 mb-4">
+                                <span className="px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-600 rounded-lg text-xs font-medium">{previewQuestion.chapter?.name || previewQuestion.chapterId || '-'}</span>
+                                <span className={`px-2 py-1 rounded-lg text-xs font-medium ${
+                                    previewQuestion.difficulty?.toLowerCase() === 'easy' ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600' :
+                                    previewQuestion.difficulty?.toLowerCase() === 'medium' ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-600' :
+                                    'bg-red-100 dark:bg-red-900/30 text-red-600'
+                                }`}>
+                                    {previewQuestion.difficulty?.toLowerCase() === 'easy' ? '🟢 Mudah' : previewQuestion.difficulty?.toLowerCase() === 'medium' ? '🟡 Sedang' : '🔴 Sulit'}
+                                </span>
+                                {previewQuestion.isSystem && (
+                                    <span className="px-2 py-1 bg-purple-100 dark:bg-purple-900/30 text-purple-600 text-xs font-medium rounded-full">🏛️ Sistem</span>
+                                )}
+                            </div>
+
+                            {/* Question Text */}
+                            <div className="bg-slate-50 dark:bg-slate-700/30 rounded-xl p-4 mb-4 border border-slate-200 dark:border-slate-600 overflow-x-auto">
+                                <p className="text-xs font-medium text-slate-500 mb-2">SOAL</p>
+                                <div className="text-slate-900 dark:text-white">
+                                    <LatexRenderer content={previewQuestion.text} />
+                                </div>
+                            </div>
+
+                            {/* Options */}
+                            <div className="mb-6">
+                                <p className="text-xs font-medium text-slate-500 mb-3">PILIHAN JAWABAN</p>
+                                <div className="grid grid-cols-1 gap-2">
+                                    {previewQuestion.options?.map((opt: any) => (
+                                        <div
+                                            key={opt.id}
+                                            className={`p-3 rounded-xl border-2 flex items-center gap-3 transition-colors ${
+                                                opt.isCorrect
+                                                    ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20'
+                                                    : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800'
+                                            }`}
+                                        >
+                                            <span className={`size-6 rounded-md flex items-center justify-center text-xs font-bold ${
+                                                opt.isCorrect
+                                                    ? 'bg-emerald-500 text-white'
+                                                    : 'bg-slate-200 dark:bg-slate-600 text-slate-600 dark:text-slate-300'
+                                            }`}>{opt.label}</span>
+                                            <div className="flex-1 overflow-x-auto text-sm text-slate-700 dark:text-slate-300">
+                                                <LatexRenderer content={opt.text} />
+                                            </div>
+                                            {opt.isCorrect && <span className="material-symbols-outlined text-emerald-500 text-sm flex-shrink-0">check_circle</span>}
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* Explanation */}
+                            {previewQuestion.explanation && (
+                                <div>
+                                    <p className="text-xs font-medium text-slate-500 mb-2">PEMBAHASAN</p>
+                                    <div className="bg-blue-50 dark:bg-blue-900/20 text-blue-900 dark:text-blue-100 p-4 rounded-xl text-sm border border-blue-100 dark:border-blue-900/50">
+                                        <LatexRenderer content={previewQuestion.explanation} />
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                        <div className="p-4 border-t border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 rounded-b-2xl flex justify-end">
+                            <button
+                                onClick={() => setPreviewQuestion(null)}
+                                className="px-6 py-2 bg-slate-200 hover:bg-slate-300 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 font-medium rounded-xl transition-colors"
+                            >
+                                Tutup
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     )
 }
