@@ -1,0 +1,524 @@
+// This is your Prisma schema file
+// Learn more: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ====================
+// ENUMS
+// ====================
+
+enum Role {
+  STUDENT
+  TEACHER
+  ADMIN
+}
+
+enum Grade {
+  X
+  XI
+  XII
+}
+
+enum SchoolType {
+  NEGERI
+  SWASTA
+}
+
+enum ContentStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum QuizType {
+  PLACEMENT
+  PRACTICE
+  POST_TEST
+  REMEDIAL
+}
+
+enum Difficulty {
+  EASY
+  MEDIUM
+  HARD
+}
+
+enum MessageRole {
+  USER
+  ASSISTANT
+  SYSTEM
+}
+
+enum AuditStatus {
+  PENDING
+  ACCURATE
+  NEEDS_IMPROVEMENT
+  INCORRECT
+}
+
+enum NotificationType {
+  INFO
+  SUCCESS
+  WARNING
+  ERROR
+  BADGE
+  REMINDER
+}
+
+// ====================
+// USERS & AUTH
+// ====================
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  role      Role     @default(STUDENT)
+  name      String
+  avatar    String?
+  phone     String?
+  isActive    Boolean  @default(true)
+  isSuspended Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  student              Student?
+  teacher              Teacher?
+  admin                Admin?
+  notifications        Notification[]
+  passwordResetTokens  PasswordResetToken[]
+
+  @@map("users")
+}
+
+model School {
+  id        String     @id @default(cuid())
+  name      String
+  address   String?
+  city      String?
+  province  String?
+  type      SchoolType @default(NEGERI)
+  isActive  Boolean    @default(true)
+  createdAt DateTime   @default(now())
+
+  // Relations
+  students Student[]
+  teachers Teacher[]
+  classes  Classroom[]
+
+  @@map("schools")
+}
+
+model Student {
+  id           String    @id @default(cuid())
+  userId       String    @unique
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  schoolId     String
+  school       School    @relation(fields: [schoolId], references: [id])
+  grade        Grade     @default(X)
+  currentLevel Int       @default(1)
+  totalXP      Int       @default(0)
+  streakDays   Int       @default(0)
+  lastActiveAt DateTime?
+
+  // Relations
+  enrollments      ClassroomEnrollment[]
+  quizAttempts     QuizAttempt[]
+  materialProgress MaterialProgress[]
+  chatSessions     ChatSession[]
+  badges           StudentBadge[]
+
+  @@map("students")
+}
+
+model Teacher {
+  id       String  @id @default(cuid())
+  userId   String  @unique
+  user     User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  schoolId String
+  school   School  @relation(fields: [schoolId], references: [id])
+  nip      String?
+
+  // Relations
+  classes    Classroom[]
+  questions  Question[]
+  materials  Material[]
+  auditLogs  AuditLog[]
+  chapters   Chapter[]
+
+  @@map("teachers")
+}
+
+model Admin {
+  id     String @id @default(cuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("admins")
+}
+
+// ====================
+// CURRICULUM
+// ====================
+
+model Chapter {
+  id          String        @id @default(cuid())
+  name        String
+  description String?
+  grade       Grade
+  order       Int
+  status      ContentStatus @default(DRAFT)
+  isSystem    Boolean       @default(false)
+  createdById String?
+  createdBy   Teacher?      @relation(fields: [createdById], references: [id])
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  // Relations
+  materials         Material[]
+  quizzes           Quiz[]
+  classroomChapters ClassroomChapter[]
+  chatSessions      ChatSession[]
+
+  @@map("chapters")
+}
+
+model Material {
+  id          String        @id @default(cuid())
+  title       String
+  content     String        @db.Text
+  duration    String?
+  videoUrl    String?
+  pdfUrl      String?
+  chapterId   String
+  chapter     Chapter       @relation(fields: [chapterId], references: [id])
+  order       Int           @default(0)
+  status      ContentStatus @default(DRAFT)
+  isSystem    Boolean       @default(false)
+  createdById String?
+  createdBy   Teacher?      @relation(fields: [createdById], references: [id])
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  // Relations
+  progress MaterialProgress[]
+
+  @@map("materials")
+}
+
+model Quiz {
+  id           String        @id @default(cuid())
+  title        String
+  description  String?
+  chapterId    String
+  chapter      Chapter       @relation(fields: [chapterId], references: [id])
+  type         QuizType      @default(PRACTICE)
+  timeLimit    Int?
+  passingScore Int           @default(70)
+  order        Int           @default(0)
+  status       ContentStatus @default(DRAFT)
+  isSystem     Boolean       @default(false)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  // Relations
+  questions QuizQuestion[]
+  attempts  QuizAttempt[]
+
+  @@map("quizzes")
+}
+
+// ====================
+// QUESTIONS
+// ====================
+
+model Question {
+  id          String     @id @default(cuid())
+  text        String     @db.Text
+  imageUrl    String?
+  difficulty  Difficulty @default(MEDIUM)
+  explanation String?    @db.Text
+  chapterId   String?
+  grade       Grade?
+  isSystem    Boolean    @default(false)
+  rating      Float      @default(0)
+  usageCount  Int        @default(0)
+  createdById String?
+  createdBy   Teacher?   @relation(fields: [createdById], references: [id])
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  // Relations
+  options        QuestionOption[]
+  quizQuestions  QuizQuestion[]
+  attemptAnswers QuizAttemptAnswer[]
+
+  @@map("questions")
+}
+
+model QuestionOption {
+  id         String   @id @default(cuid())
+  questionId String
+  question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  label      String // A, B, C, D, E
+  text       String
+  isCorrect  Boolean  @default(false)
+
+  @@map("question_options")
+}
+
+model QuizQuestion {
+  id         String   @id @default(cuid())
+  quizId     String
+  quiz       Quiz     @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  questionId String
+  question   Question @relation(fields: [questionId], references: [id])
+  order      Int
+
+  @@unique([quizId, questionId])
+  @@map("quiz_questions")
+}
+
+// ====================
+// CLASSROOM
+// ====================
+
+model Classroom {
+  id           String   @id @default(cuid())
+  name         String
+  description  String?
+  grade        Grade
+  joinCode     String   @unique
+  teacherId    String
+  teacher      Teacher  @relation(fields: [teacherId], references: [id])
+  schoolId     String
+  school       School   @relation(fields: [schoolId], references: [id])
+  academicYear String
+  semester     Int
+  isActive     Boolean  @default(true)
+  isFinished   Boolean  @default(false)
+  autoRemedial Boolean  @default(true)
+  kkmScore     Int      @default(70)
+  createdAt    DateTime @default(now())
+
+  // Relations
+  enrollments ClassroomEnrollment[]
+  chapters    ClassroomChapter[]
+
+  @@map("classrooms")
+}
+
+model ClassroomEnrollment {
+  id          String    @id @default(cuid())
+  classroomId String
+  classroom   Classroom @relation(fields: [classroomId], references: [id])
+  studentId   String
+  student     Student   @relation(fields: [studentId], references: [id])
+  joinedAt    DateTime  @default(now())
+  isActive    Boolean   @default(true)
+
+  @@unique([classroomId, studentId])
+  @@map("classroom_enrollments")
+}
+
+model ClassroomChapter {
+  id          String    @id @default(cuid())
+  classroomId String
+  classroom   Classroom @relation(fields: [classroomId], references: [id])
+  chapterId   String
+  chapter     Chapter   @relation(fields: [chapterId], references: [id])
+  order       Int
+  isLocked    Boolean   @default(false)
+
+  @@unique([classroomId, chapterId])
+  @@map("classroom_chapters")
+}
+
+// ====================
+// PROGRESS & ATTEMPTS
+// ====================
+
+model MaterialProgress {
+  id          String    @id @default(cuid())
+  studentId   String
+  student     Student   @relation(fields: [studentId], references: [id])
+  materialId  String
+  material    Material  @relation(fields: [materialId], references: [id])
+  isCompleted Boolean   @default(false)
+  progress    Int       @default(0)
+  timeSpent   Int       @default(0)
+  completedAt DateTime?
+
+  @@unique([studentId, materialId])
+  @@map("material_progress")
+}
+
+model QuizAttempt {
+  id             String    @id @default(cuid())
+  studentId      String
+  student        Student   @relation(fields: [studentId], references: [id])
+  quizId         String
+  quiz           Quiz      @relation(fields: [quizId], references: [id])
+  score          Float     @default(0)
+  correctCount   Int       @default(0)
+  totalQuestions Int
+  timeSpent      Int       @default(0)
+  startedAt      DateTime  @default(now())
+  submittedAt    DateTime?
+  isPassed       Boolean   @default(false)
+
+  // Relations
+  answers QuizAttemptAnswer[]
+
+  @@map("quiz_attempts")
+}
+
+model QuizAttemptAnswer {
+  id             String      @id @default(cuid())
+  attemptId      String
+  attempt        QuizAttempt @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+  questionId     String
+  question       Question    @relation(fields: [questionId], references: [id])
+  selectedOption String
+  isCorrect      Boolean
+  timeSpent      Int         @default(0)
+
+  @@map("quiz_attempt_answers")
+}
+
+// ====================
+// AI & CHAT
+// ====================
+
+model ChatSession {
+  id        String   @id @default(cuid())
+  studentId String
+  student   Student  @relation(fields: [studentId], references: [id])
+  title     String?
+  chapterId String?
+  chapter   Chapter? @relation(fields: [chapterId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  messages ChatMessage[]
+
+  @@map("chat_sessions")
+}
+
+model ChatMessage {
+  id        String      @id @default(cuid())
+  sessionId String
+  session   ChatSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  role      MessageRole
+  content   String      @db.Text
+  createdAt DateTime    @default(now())
+  isAudited Boolean     @default(false)
+
+  // Relations
+  auditLog AuditLog?
+
+  @@map("chat_messages")
+}
+
+model AuditLog {
+  id        String      @id @default(cuid())
+  messageId String      @unique
+  message   ChatMessage @relation(fields: [messageId], references: [id])
+  teacherId String
+  teacher   Teacher     @relation(fields: [teacherId], references: [id])
+  status    AuditStatus @default(PENDING)
+  feedback  String?
+  auditedAt DateTime?
+  createdAt DateTime    @default(now())
+
+  @@map("audit_logs")
+}
+
+// ====================
+// GAMIFICATION
+// ====================
+
+model Badge {
+  id          String @id @default(cuid())
+  name        String
+  description String
+  icon        String
+  requirement String
+  xpReward    Int    @default(0)
+
+  // Relations
+  students StudentBadge[]
+
+  @@map("badges")
+}
+
+model StudentBadge {
+  id        String   @id @default(cuid())
+  studentId String
+  student   Student  @relation(fields: [studentId], references: [id])
+  badgeId   String
+  badge     Badge    @relation(fields: [badgeId], references: [id])
+  earnedAt  DateTime @default(now())
+
+  @@unique([studentId, badgeId])
+  @@map("student_badges")
+}
+
+model Notification {
+  id        String           @id @default(cuid())
+  userId    String
+  user      User             @relation(fields: [userId], references: [id])
+  title     String
+  message   String
+  type      NotificationType
+  isRead    Boolean          @default(false)
+  link      String?
+  createdAt DateTime         @default(now())
+
+  @@map("notifications")
+}
+
+// ====================
+// API LOGS (Admin)
+// ====================
+
+model ApiLog {
+  id         String   @id @default(cuid())
+  method     String
+  path       String
+  statusCode Int
+  duration   Int // ms
+  userId     String?
+  userAgent  String?
+  ip         String?
+  createdAt  DateTime @default(now())
+
+  @@map("api_logs")
+}
+
+// ====================
+// PASSWORD RESET
+// ====================
+
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token     String   @unique
+  expiresAt DateTime
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@map("password_reset_tokens")
+}
+
+

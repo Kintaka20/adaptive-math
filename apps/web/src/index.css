@@ -1,0 +1,241 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom scrollbar for better aesthetics */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #c7c7c7;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+/* Glass navigation effect */
+.glass-nav {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(229, 231, 235, 0.5);
+}
+
+/* Dark mode glass nav */
+.dark .glass-nav {
+  background: rgba(16, 17, 34, 0.85);
+  border-bottom: 1px solid rgba(51, 65, 85, 0.5);
+}
+
+/* Selection styling */
+::selection {
+  background-color: rgba(100, 103, 242, 0.3);
+  color: #4f52cc;
+}
+
+/* Smooth scroll behavior */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Base body styles */
+body {
+  @apply bg-background-light dark:bg-background-dark text-slate-900 dark:text-white font-display overflow-x-hidden antialiased;
+}
+
+/* ========================= */
+/* AI Chat Response Styling  */
+/* ========================= */
+.ai-chat-content {
+  font-size: 0.9rem;
+  line-height: 1.7;
+  color: #334155;
+  word-break: break-word;
+  overflow-wrap: break-word;
+}
+
+.dark .ai-chat-content {
+  color: #cbd5e1;
+}
+
+/* Paragraphs */
+.ai-chat-content .ai-p {
+  margin: 0.5em 0;
+}
+
+.ai-chat-content .ai-p:first-child {
+  margin-top: 0;
+}
+
+.ai-chat-content .ai-p:last-child {
+  margin-bottom: 0;
+}
+
+/* Spacer between sections */
+.ai-chat-content .ai-spacer {
+  height: 0.4em;
+}
+
+/* Headings */
+.ai-chat-content .ai-h1 {
+  font-size: 1.15em;
+  font-weight: 800;
+  color: #1e293b;
+  margin: 1em 0 0.5em;
+  padding-bottom: 0.3em;
+  border-bottom: 2px solid #e2e8f0;
+}
+
+.ai-chat-content .ai-h2 {
+  font-size: 1.05em;
+  font-weight: 700;
+  color: #6366f1;
+  margin: 0.8em 0 0.4em;
+}
+
+.ai-chat-content .ai-h3 {
+  font-size: 1em;
+  font-weight: 700;
+  color: #7c3aed;
+  margin: 0.6em 0 0.3em;
+}
+
+.dark .ai-chat-content .ai-h1 {
+  color: #f1f5f9;
+  border-bottom-color: #334155;
+}
+
+.dark .ai-chat-content .ai-h2 {
+  color: #818cf8;
+}
+
+.dark .ai-chat-content .ai-h3 {
+  color: #a78bfa;
+}
+
+/* Bold text */
+.ai-chat-content .ai-bold {
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.dark .ai-chat-content .ai-bold {
+  color: #f1f5f9;
+}
+
+/* Inline code */
+.ai-chat-content .ai-code {
+  background: rgba(99, 102, 241, 0.1);
+  color: #6366f1;
+  padding: 0.15em 0.4em;
+  border-radius: 0.3em;
+  font-size: 0.88em;
+  font-family: 'Fira Code', 'Consolas', 'Monaco', monospace;
+}
+
+.dark .ai-chat-content .ai-code {
+  background: rgba(99, 102, 241, 0.2);
+  color: #a5b4fc;
+}
+
+/* Unordered list */
+.ai-chat-content .ai-ul {
+  margin: 0.5em 0;
+  padding-left: 0;
+  list-style: none;
+}
+
+.ai-chat-content .ai-ul > li {
+  position: relative;
+  padding-left: 1.5em;
+  margin: 0.35em 0;
+}
+
+.ai-chat-content .ai-ul > li::before {
+  content: '';
+  position: absolute;
+  left: 0.35em;
+  top: 0.65em;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #6366f1, #a855f7);
+}
+
+/* Ordered list */
+.ai-chat-content .ai-ol {
+  margin: 0.5em 0;
+  padding-left: 0;
+  list-style: none;
+  counter-reset: ai-counter;
+}
+
+.ai-chat-content .ai-ol > li {
+  position: relative;
+  padding-left: 2em;
+  margin: 0.4em 0;
+  counter-increment: ai-counter;
+}
+
+.ai-chat-content .ai-ol > li::before {
+  content: counter(ai-counter);
+  position: absolute;
+  left: 0;
+  top: 0.1em;
+  width: 1.5em;
+  height: 1.5em;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #6366f1, #a855f7);
+  color: white;
+  font-size: 0.75em;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+/* KaTeX block formula */
+.ai-chat-content .ai-katex-block {
+  margin: 0.8em 0;
+  padding: 0.8em 1em;
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.05), rgba(168, 85, 247, 0.05));
+  border-left: 3px solid #6366f1;
+  border-radius: 0 0.5em 0.5em 0;
+  overflow-x: auto;
+  text-align: center;
+}
+
+.dark .ai-chat-content .ai-katex-block {
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(168, 85, 247, 0.1));
+  border-left-color: #818cf8;
+}
+
+/* KaTeX inline formula */
+.ai-chat-content .ai-katex-inline .katex {
+  font-size: 1em;
+}
+
+/* Make KaTeX not overflow */
+.ai-chat-content .katex-display {
+  margin: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 0.2em 0;
+}
+
+.ai-chat-content .katex-display > .katex {
+  white-space: normal;
+}
+
+.ai-chat-content .katex {
+  font-size: 1.05em;
+}
+

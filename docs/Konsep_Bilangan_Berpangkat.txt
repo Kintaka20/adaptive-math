@@ -1,0 +1,85 @@
+Konsep Bilangan Berpangkat
+
+# Bilangan Berpangkat (Eksponen)
+
+## A. Pengertian Eksponen
+
+Bilangan berpangkat atau eksponen adalah bentuk perkalian berulang suatu bilangan yang sama.
+
+$$a^n = \underbrace{a \times a \times a \times \cdots \times a}_{n \text{ faktor}}$$
+
+**Keterangan:**
+- $a$ disebut **bilangan pokok** (basis)
+- $n$ disebut **pangkat** (eksponen)
+
+**Contoh:**
+- $2^4 = 2 \times 2 \times 2 \times 2 = 16$
+- $3^3 = 3 \times 3 \times 3 = 27$
+- $5^2 = 5 \times 5 = 25$
+
+---
+
+## B. Sifat-Sifat Eksponen (Bilangan Bulat)
+
+### 1. Perkalian Basis Sama
+$$a^m \times a^n = a^{m+n}$$
+**Contoh:** $2^3 \times 2^4 = 2^{3+4} = 2^7 = 128$
+
+### 2. Pembagian Basis Sama
+$$\frac{a^m}{a^n} = a^{m-n}, \quad a \neq 0$$
+**Contoh:** $\frac{5^6}{5^2} = 5^{6-2} = 5^4 = 625$
+
+### 3. Pangkat dari Pangkat
+$$(a^m)^n = a^{m \times n}$$
+**Contoh:** $(2^3)^2 = 2^{3 \times 2} = 2^6 = 64$
+
+### 4. Pangkat dari Perkalian
+$$(a \times b)^n = a^n \times b^n$$
+**Contoh:** $(2 \times 3)^3 = 2^3 \times 3^3 = 8 \times 27 = 216$
+
+### 5. Pangkat dari Pembagian
+$$\left(\frac{a}{b}\right)^n = \frac{a^n}{b^n}, \quad b \neq 0$$
+**Contoh:** $\left(\frac{3}{2}\right)^2 = \frac{9}{4}$
+
+---
+
+## C. Pangkat Nol dan Pangkat Negatif
+
+### Pangkat Nol
+$$a^0 = 1, \quad a \neq 0$$
+
+### Pangkat Negatif
+$$a^{-n} = \frac{1}{a^n}, \quad a \neq 0$$
+
+**Contoh:**
+- $5^0 = 1$
+- $2^{-3} = \frac{1}{2^3} = \frac{1}{8}$
+- $10^{-2} = \frac{1}{100} = 0{,}01$
+
+---
+
+## D. Pangkat Pecahan (Bentuk Akar)
+
+$$a^{\frac{m}{n}} = \sqrt[n]{a^m} = (\sqrt[n]{a})^m$$
+
+**Contoh:**
+- $8^{\frac{1}{3}} = \sqrt[3]{8} = 2$
+- $27^{\frac{2}{3}} = (\sqrt[3]{27})^2 = 3^2 = 9$
+- $16^{\frac{3}{4}} = (\sqrt[4]{16})^3 = 2^3 = 8$
+
+---
+
+## E. Bentuk Akar
+
+### Sifat Operasi Bentuk Akar
+- $\sqrt{a} \times \sqrt{b} = \sqrt{ab}$
+- $\frac{\sqrt{a}}{\sqrt{b}} = \sqrt{\frac{a}{b}}$
+- $a\sqrt{b} \pm c\sqrt{b} = (a \pm c)\sqrt{b}$
+
+### Merasionalkan Penyebut
+$$\frac{a}{\sqrt{b}} = \frac{a\sqrt{b}}{b}$$
+
+$$\frac{a}{\sqrt{b}+\sqrt{c}} = \frac{a(\sqrt{b}-\sqrt{c})}{b-c}$$
+
+**Contoh:**
+$$\frac{6}{\sqrt{3}} = \frac{6\sqrt{3}}{3} = 2\sqrt{3}$$
