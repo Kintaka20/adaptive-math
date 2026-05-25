@@ -70,7 +70,7 @@ export default function ContentEditorPage() {
                 if (classId) {
                     const cls = await classApi.get(classId)
                     if (cls.chapters) {
-                        setChapters(cls.chapters)
+                        setChapters((cls.chapters as any[]).map(c => c.chapter))
                     }
                 }
                 
