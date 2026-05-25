@@ -12,7 +12,6 @@
     "db:seed": "tsx prisma/seed.ts",
     "db:studio": "prisma studio",
     "db:generate": "prisma generate",
-    "lint": "eslint src --ext .ts",
     "postinstall": "prisma generate"
   },
   "dependencies": {
