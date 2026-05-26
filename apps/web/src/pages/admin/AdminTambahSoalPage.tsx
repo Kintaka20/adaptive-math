@@ -20,9 +20,12 @@ export default function AdminTambahSoalPage() {
         grade: '',
         difficulty: 'medium',
         question: '',
-        image: null as File | null,
+        imageUrl: '',
         explanation: '',
     })
+
+    const [isUploading, setIsUploading] = useState(false)
+    const { uploadApi } = require('../../lib/api')
 
     const [answers, setAnswers] = useState<AnswerOption[]>([
         { id: 'A', text: '' },
@@ -62,10 +65,24 @@ export default function AdminTambahSoalPage() {
         }
     }
 
-    const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0]
-        if (file && file.size <= 5 * 1024 * 1024) {
-            setFormData(prev => ({ ...prev, image: file }))
+        if (!file) return
+
+        if (file.size > 5 * 1024 * 1024) {
+            alert('Ukuran gambar maksimal 5MB')
+            return
+        }
+
+        setIsUploading(true)
+        try {
+            const res = await uploadApi.uploadImage(file)
+            setFormData(prev => ({ ...prev, imageUrl: res.url }))
+        } catch (error: any) {
+            console.error('Failed to upload image:', error)
+            alert(error.message || 'Gagal mengunggah gambar.')
+        } finally {
+            setIsUploading(false)
         }
     }
 
@@ -154,16 +171,18 @@ export default function AdminTambahSoalPage() {
 
                     {/* Image Upload */}
                     <div className="mt-4 relative border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-xl p-4 text-center hover:border-amber-500 transition-colors">
-                        {formData.image ? (
-                            <div className="flex items-center justify-center gap-4">
-                                <img src={URL.createObjectURL(formData.image)} alt="Preview" className="h-16 rounded-lg" />
-                                <button onClick={() => setFormData(prev => ({ ...prev, image: null }))} className="text-red-500 text-sm">✕ Hapus</button>
+                        {formData.imageUrl ? (
+                            <div className="flex flex-col items-center justify-center gap-2">
+                                <img src={formData.imageUrl} alt="Preview" className="h-32 object-contain rounded-lg" />
+                                <button onClick={() => setFormData(prev => ({ ...prev, imageUrl: '' }))} className="text-red-500 text-sm hover:underline">✕ Hapus Gambar</button>
                             </div>
                         ) : (
                             <>
-                                <span className="material-symbols-outlined text-2xl text-slate-300">image</span>
-                                <p className="text-sm text-slate-500">Tambah gambar (opsional)</p>
-                                <input type="file" accept="image/*" onChange={handleImageUpload} className="absolute inset-0 opacity-0 cursor-pointer" />
+                                <span className="material-symbols-outlined text-2xl text-slate-300">
+                                    {isUploading ? 'hourglass_empty' : 'image'}
+                                </span>
+                                <p className="text-sm text-slate-500">{isUploading ? 'Mengunggah...' : 'Tambah gambar (opsional)'}</p>
+                                <input type="file" accept="image/*" disabled={isUploading} onChange={handleImageUpload} className="absolute inset-0 opacity-0 cursor-pointer disabled:cursor-not-allowed" />
                             </>
                         )}
                     </div>

@@ -39,6 +39,8 @@ export default function LatexRenderer({ content, className = '' }: LatexRenderer
             }
         })
 
+        processed = processed.replace(/!\[([^\]]*)\]\s*\(([^)]+)\)/g, '<img src="$2" alt="$1" class="ai-image" style="max-width:100%;border-radius:0.75rem;margin:0.5rem 0;" />')
+
         const lines = processed.split('\n')
         const outputLines: string[] = []
         let inList = false
@@ -100,7 +102,7 @@ export default function LatexRenderer({ content, className = '' }: LatexRenderer
 
                 line = applyInline(line)
 
-                if (line.trim() && !line.startsWith('<h') && !line.startsWith('<div') && !line.startsWith('<ul') && !line.startsWith('<ol') && !line.startsWith('<li')) {
+                if (line.trim() && !line.startsWith('<h') && !line.startsWith('<div') && !line.startsWith('<ul') && !line.startsWith('<ol') && !line.startsWith('<li') && !line.startsWith('<img')) {
                     line = `<p class="ai-p">${line}</p>`
                 } else if (!line.trim()) {
                     line = '<div class="ai-spacer"></div>'

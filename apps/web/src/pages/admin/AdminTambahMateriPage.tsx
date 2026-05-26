@@ -17,8 +17,14 @@ export default function AdminTambahMateriPage() {
         duration: '',
         content: '',
         videoUrl: '',
-        documentFile: null as File | null,
+        documentUrl: '',
     })
+
+    const [isUploadingVideo, setIsUploadingVideo] = useState(false)
+    const [isUploadingPdf, setIsUploadingPdf] = useState(false)
+    const [isUploadingImageContent, setIsUploadingImageContent] = useState(false)
+
+    const { uploadApi } = require('../../lib/api')
 
     const insertLatex = (latex: string) => {
         const textarea = document.getElementById('content-textarea') as HTMLTextAreaElement
@@ -49,12 +55,6 @@ export default function AdminTambahMateriPage() {
         }
     }
 
-    const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0]
-        if (file && file.size <= 10 * 1024 * 1024) {
-            setFormData(prev => ({ ...prev, documentFile: file }))
-        }
-    }
 
     return (
         <div className="max-w-4xl mx-auto space-y-6 pb-20 lg:pb-0">
@@ -111,39 +111,73 @@ export default function AdminTambahMateriPage() {
                     </div>
                 </div>
 
-                {/* Video URL */}
+                {/* Main Media Upload */}
                 <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-slate-200 dark:border-slate-700">
-                    <h2 className="font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+                    <label className="font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
                         <span className="material-symbols-outlined text-purple-500">play_circle</span>
-                        Video (Opsional)
-                    </h2>
-                    <input type="url" value={formData.videoUrl} onChange={(e) => setFormData({ ...formData, videoUrl: e.target.value })}
-                        placeholder="https://youtube.com/watch?v=..."
-                        className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900" />
+                        Media Utama (Video / Gambar) (Opsional)
+                    </label>
+                    <div className="flex gap-3">
+                        <input type="url" value={formData.videoUrl}
+                            onChange={(e) => setFormData({ ...formData, videoUrl: e.target.value })}
+                            placeholder="Tempel URL Video/Gambar atau upload file..."
+                            className="flex-1 px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 focus:border-purple-500 outline-none" />
+                        <div className="relative">
+                            <button type="button" disabled={isUploadingVideo} className="h-full px-6 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-medium rounded-xl border border-slate-200 dark:border-slate-700 transition-all flex items-center gap-2">
+                                <span className="material-symbols-outlined text-xl">{isUploadingVideo ? 'hourglass_empty' : 'upload_file'}</span>
+                                {isUploadingVideo ? 'Mengunggah...' : 'Pilih File'}
+                            </button>
+                            <input type="file" accept="video/*,image/*" disabled={isUploadingVideo}
+                                onChange={async (e) => {
+                                    const file = e.target.files?.[0]
+                                    if (!file) return
+                                    setIsUploadingVideo(true)
+                                    try {
+                                        const res = await uploadApi.uploadImage(file)
+                                        setFormData({ ...formData, videoUrl: res.url })
+                                    } catch (error: any) {
+                                        alert('Gagal mengunggah media: ' + error.message)
+                                    } finally {
+                                        setIsUploadingVideo(false)
+                                    }
+                                }}
+                                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed" />
+                        </div>
+                    </div>
                 </div>
 
-                {/* File Upload */}
+                {/* PDF/Doc Upload */}
                 <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-slate-200 dark:border-slate-700">
-                    <h2 className="font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+                    <label className="font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
                         <span className="material-symbols-outlined text-purple-500">attach_file</span>
-                        File Pendukung (Opsional)
-                    </h2>
-                    <div className="relative border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-xl p-6 text-center hover:border-purple-500 transition-colors">
-                        {formData.documentFile ? (
-                            <div className="flex items-center justify-center gap-4">
-                                <span className="material-symbols-outlined text-4xl text-purple-500">description</span>
-                                <div>
-                                    <p className="text-sm font-medium">{formData.documentFile.name}</p>
-                                    <button onClick={() => setFormData(prev => ({ ...prev, documentFile: null }))} className="text-red-500 text-sm">✕ Hapus</button>
-                                </div>
-                            </div>
-                        ) : (
-                            <>
-                                <span className="material-symbols-outlined text-4xl text-slate-300">upload_file</span>
-                                <p className="text-slate-500 mt-2">Klik atau drag & drop file</p>
-                                <input type="file" accept=".pdf,.docx,.pptx" onChange={handleFileUpload} className="absolute inset-0 opacity-0 cursor-pointer" />
-                            </>
-                        )}
+                        Lampiran Dokumen (PDF/Word) (Opsional)
+                    </label>
+                    <div className="flex gap-3">
+                        <input type="url" value={formData.documentUrl}
+                            onChange={(e) => setFormData({ ...formData, documentUrl: e.target.value })}
+                            placeholder="Tempel URL Dokumen atau upload file..."
+                            className="flex-1 px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 focus:border-purple-500 outline-none" />
+                        <div className="relative">
+                            <button type="button" disabled={isUploadingPdf} className="h-full px-6 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-medium rounded-xl border border-slate-200 dark:border-slate-700 transition-all flex items-center gap-2">
+                                <span className="material-symbols-outlined text-xl">{isUploadingPdf ? 'hourglass_empty' : 'upload_file'}</span>
+                                {isUploadingPdf ? 'Mengunggah...' : 'Pilih File'}
+                            </button>
+                            <input type="file" accept=".pdf,.doc,.docx" disabled={isUploadingPdf}
+                                onChange={async (e) => {
+                                    const file = e.target.files?.[0]
+                                    if (!file) return
+                                    setIsUploadingPdf(true)
+                                    try {
+                                        const res = await uploadApi.uploadImage(file)
+                                        setFormData({ ...formData, documentUrl: res.url })
+                                    } catch (error: any) {
+                                        alert('Gagal mengunggah dokumen: ' + error.message)
+                                    } finally {
+                                        setIsUploadingPdf(false)
+                                    }
+                                }}
+                                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed" />
+                        </div>
                     </div>
                 </div>
 
@@ -170,6 +204,31 @@ export default function AdminTambahMateriPage() {
                                 {latexButtons.map(btn => (
                                     <button key={btn.label} type="button" onClick={() => insertLatex(btn.value)} className="px-2 py-1.5 rounded-lg hover:bg-purple-100 text-purple-700 text-sm font-mono">{btn.label}</button>
                                 ))}
+                                <div className="w-px h-6 bg-slate-300 dark:bg-slate-600 mx-2" />
+                                
+                                {/* Image to Markdown Upload */}
+                                <div className="relative">
+                                    <button type="button" disabled={isUploadingImageContent} className="px-3 py-1.5 rounded-lg text-sm font-medium flex items-center gap-1 hover:bg-slate-200 dark:hover:bg-slate-700 font-bold">
+                                        <span className="material-symbols-outlined text-sm">{isUploadingImageContent ? 'hourglass_empty' : 'add_photo_alternate'}</span>
+                                        {isUploadingImageContent ? 'Upload...' : 'Sisipkan Gambar'}
+                                    </button>
+                                    <input type="file" accept="image/*" disabled={isUploadingImageContent}
+                                        onChange={async (e) => {
+                                            const file = e.target.files?.[0]
+                                            if (!file) return
+                                            setIsUploadingImageContent(true)
+                                            try {
+                                                const res = await uploadApi.uploadImage(file)
+                                                const imageMarkdown = `\n![Gambar](${res.url})\n`
+                                                insertLatex(imageMarkdown)
+                                            } catch (error: any) {
+                                                alert('Gagal mengunggah gambar: ' + error.message)
+                                            } finally {
+                                                setIsUploadingImageContent(false)
+                                            }
+                                        }}
+                                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed" />
+                                </div>
                             </div>
                             <textarea id="content-textarea" value={formData.content} onChange={(e) => setFormData({ ...formData, content: e.target.value })}
                                 placeholder="Tulis konten materi dengan Markdown + LaTeX..." rows={12}
