@@ -51,7 +51,7 @@ router.post('/', upload.single('file'), async (req, res) => {
         }
 
         // Return URL aman HTTPS dari gambar
-        res.json({ success: true, url: result.secure_url })
+        res.json({ success: true, data: { url: result.secure_url } })
       }
     )
 
