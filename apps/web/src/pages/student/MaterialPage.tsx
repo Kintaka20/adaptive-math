@@ -8,6 +8,7 @@ interface Material {
     title: string
     content: string
     videoUrl?: string
+    pdfUrl?: string
     xpReward?: number
     duration?: string
     description?: string
@@ -106,6 +107,12 @@ export default function MaterialPage() {
 
     const handleDownloadPDF = () => {
         if (!material) return
+        
+        if (material.pdfUrl) {
+            window.open(material.pdfUrl, '_blank')
+            return
+        }
+
         const content = `${material.title}\n\n${material.content || ''}`
         const blob = new Blob([content], { type: 'text/plain' })
         const url = URL.createObjectURL(blob)
@@ -167,8 +174,8 @@ export default function MaterialPage() {
                         )}
                         <button onClick={handleDownloadPDF}
                             className="bg-white/20 backdrop-blur-sm rounded-lg px-3 py-1.5 flex items-center gap-2 hover:bg-white/30 transition-colors">
-                            <span className="material-symbols-outlined text-sm">download</span>
-                            Download
+                            <span className="material-symbols-outlined text-sm">{material.pdfUrl ? 'description' : 'download'}</span>
+                            {material.pdfUrl ? 'Buka Lampiran Dokumen' : 'Download Text'}
                         </button>
                     </div>
                 </div>
@@ -193,8 +200,8 @@ export default function MaterialPage() {
                         </h2>
                         <button onClick={handleDownloadPDF}
                             className="px-3 py-1.5 border border-slate-200 dark:border-slate-700 rounded-lg text-sm flex items-center gap-2 hover:bg-slate-50 dark:hover:bg-slate-700">
-                            <span className="material-symbols-outlined text-sm">picture_as_pdf</span>
-                            Export
+                            <span className="material-symbols-outlined text-sm">{material.pdfUrl ? 'open_in_new' : 'picture_as_pdf'}</span>
+                            {material.pdfUrl ? 'Buka Lampiran' : 'Export TXT'}
                         </button>
                     </div>
                     <div className="prose dark:prose-invert max-w-none">

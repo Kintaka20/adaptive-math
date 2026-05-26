@@ -46,8 +46,13 @@ export default function ContentEditorPage() {
         content: '',
         chapterId: initialChapterId,
         duration: '',
-        videoUrl: ''
+        videoUrl: '',
+        pdfUrl: ''
     })
+
+    const [isUploadingVideo, setIsUploadingVideo] = useState(false)
+    const [isUploadingPdf, setIsUploadingPdf] = useState(false)
+    const [isUploadingImageContent, setIsUploadingImageContent] = useState(false)
 
     const [quizData, setQuizData] = useState({
         title: '',
@@ -112,7 +117,22 @@ export default function ContentEditorPage() {
         { label: 'xₙ', value: '$x_{n}$' },
     ]
 
-    const insertLatex = (latex: string, qId: string) => {
+    const insertLatex = (latex: string, qId?: string) => {
+        if (!qId) {
+            const textarea = document.getElementById('material-content-textarea') as HTMLTextAreaElement
+            if (textarea) {
+                const start = textarea.selectionStart
+                const end = textarea.selectionEnd
+                const newText = materialData.content.substring(0, start) + latex + materialData.content.substring(end)
+                setMaterialData(prev => ({ ...prev, content: newText }))
+                setTimeout(() => {
+                    textarea.focus()
+                    textarea.setSelectionRange(start + latex.length, start + latex.length)
+                }, 0)
+            }
+            return
+        }
+
         const textarea = document.getElementById('question-textarea-' + qId) as HTMLTextAreaElement
         if (textarea) {
             const start = textarea.selectionStart
@@ -337,20 +357,131 @@ export default function ContentEditorPage() {
                             <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-6 space-y-4">
                                 <div>
                                     <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Judul Materi *</label>
-                                    <input required type="text" value={materialData.title} onChange={(e) => setMaterialData({ ...materialData, title: e.target.value })} className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900" />
+                                    <input required type="text" value={materialData.title} onChange={(e) => setMaterialData({ ...materialData, title: e.target.value })} className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 focus:border-purple-500 outline-none" />
                                 </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Bab *</label>
-                                    <select required value={materialData.chapterId} onChange={(e) => {
-                                    setMaterialData({ ...materialData, chapterId: e.target.value })
-                                }} className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900">
-                                        <option value="">Pilih Bab</option>
-                                        {chapters.map(ch => <option key={ch.id} value={ch.id}>{ch.name}</option>)}
-                                    </select>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Bab *</label>
+                                        <select required value={materialData.chapterId} onChange={(e) => {
+                                        setMaterialData({ ...materialData, chapterId: e.target.value })
+                                    }} className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 focus:border-purple-500 outline-none">
+                                            <option value="">Pilih Bab</option>
+                                            {chapters.map(ch => <option key={ch.id} value={ch.id}>{ch.name}</option>)}
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Estimasi Waktu Belajar (Opsional)</label>
+                                        <input type="text" placeholder="Contoh: 15 Menit" value={materialData.duration} onChange={(e) => setMaterialData({ ...materialData, duration: e.target.value })} className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 focus:border-purple-500 outline-none" />
+                                    </div>
                                 </div>
+
+                                {/* Video Upload */}
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Konten (Mendukung LaTeX) *</label>
-                                    <textarea required rows={6} value={materialData.content} onChange={(e) => setMaterialData({ ...materialData, content: e.target.value })} className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900"></textarea>
+                                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">🎥 Video Materi (Opsional)</label>
+                                    <div className="flex gap-3">
+                                        <input type="url" value={materialData.videoUrl}
+                                            onChange={(e) => setMaterialData({ ...materialData, videoUrl: e.target.value })}
+                                            placeholder="Tempel URL Video (YouTube/Lainnya) atau upload file..."
+                                            className="flex-1 px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 focus:border-purple-500 outline-none" />
+                                        <div className="relative">
+                                            <button type="button" disabled={isUploadingVideo} className="h-full px-6 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-medium rounded-xl border border-slate-200 dark:border-slate-700 transition-all flex items-center gap-2">
+                                                <span className="material-symbols-outlined text-xl">{isUploadingVideo ? 'hourglass_empty' : 'upload_file'}</span>
+                                                {isUploadingVideo ? 'Mengunggah...' : 'Pilih File'}
+                                            </button>
+                                            <input type="file" accept="video/*" disabled={isUploadingVideo}
+                                                onChange={async (e) => {
+                                                    const file = e.target.files?.[0]
+                                                    if (!file) return
+                                                    setIsUploadingVideo(true)
+                                                    try {
+                                                        const res = await uploadApi.uploadImage(file)
+                                                        setMaterialData({ ...materialData, videoUrl: res.url })
+                                                    } catch (error: any) {
+                                                        alert('Gagal mengunggah video: ' + error.message)
+                                                    } finally {
+                                                        setIsUploadingVideo(false)
+                                                    }
+                                                }}
+                                                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed" />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* PDF/Doc Upload */}
+                                <div>
+                                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">📄 Lampiran Dokumen (PDF/Word) (Opsional)</label>
+                                    <div className="flex gap-3">
+                                        <input type="url" value={materialData.pdfUrl}
+                                            onChange={(e) => setMaterialData({ ...materialData, pdfUrl: e.target.value })}
+                                            placeholder="Tempel URL Dokumen atau upload file..."
+                                            className="flex-1 px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 focus:border-purple-500 outline-none" />
+                                        <div className="relative">
+                                            <button type="button" disabled={isUploadingPdf} className="h-full px-6 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-medium rounded-xl border border-slate-200 dark:border-slate-700 transition-all flex items-center gap-2">
+                                                <span className="material-symbols-outlined text-xl">{isUploadingPdf ? 'hourglass_empty' : 'upload_file'}</span>
+                                                {isUploadingPdf ? 'Mengunggah...' : 'Pilih File'}
+                                            </button>
+                                            <input type="file" accept=".pdf,.doc,.docx" disabled={isUploadingPdf}
+                                                onChange={async (e) => {
+                                                    const file = e.target.files?.[0]
+                                                    if (!file) return
+                                                    setIsUploadingPdf(true)
+                                                    try {
+                                                        const res = await uploadApi.uploadImage(file)
+                                                        setMaterialData({ ...materialData, pdfUrl: res.url })
+                                                    } catch (error: any) {
+                                                        alert('Gagal mengunggah dokumen: ' + error.message)
+                                                    } finally {
+                                                        setIsUploadingPdf(false)
+                                                    }
+                                                }}
+                                                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed" />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">📝 Konten (Mendukung Markdown & LaTeX) *</label>
+                                    
+                                    <div className="flex flex-wrap gap-2 mb-3 p-2 bg-slate-50 dark:bg-slate-900 rounded-xl items-center justify-between">
+                                        <div className="flex gap-1 flex-wrap items-center">
+                                            {latexButtons.map(btn => (
+                                                <button key={btn.label} type="button" onClick={() => insertLatex(btn.value)}
+                                                    className="px-2 py-1.5 rounded-lg hover:bg-purple-100 dark:hover:bg-purple-900/30 text-purple-700 dark:text-purple-400 text-sm font-mono">
+                                                    {btn.label}
+                                                </button>
+                                            ))}
+                                            <div className="w-px h-6 bg-slate-300 dark:bg-slate-600 mx-2" />
+                                            
+                                            {/* Image to Markdown Upload */}
+                                            <div className="relative">
+                                                <button type="button" disabled={isUploadingImageContent} className="px-3 py-1.5 rounded-lg text-sm font-medium flex items-center gap-1 hover:bg-slate-200 dark:hover:bg-slate-700">
+                                                    <span className="material-symbols-outlined text-sm">{isUploadingImageContent ? 'hourglass_empty' : 'add_photo_alternate'}</span>
+                                                    {isUploadingImageContent ? 'Upload...' : 'Sisipkan Gambar'}
+                                                </button>
+                                                <input type="file" accept="image/*" disabled={isUploadingImageContent}
+                                                    onChange={async (e) => {
+                                                        const file = e.target.files?.[0]
+                                                        if (!file) return
+                                                        setIsUploadingImageContent(true)
+                                                        try {
+                                                            const res = await uploadApi.uploadImage(file)
+                                                            const imageMarkdown = `\n![Gambar](${res.url})\n`
+                                                            insertLatex(imageMarkdown)
+                                                        } catch (error: any) {
+                                                            alert('Gagal mengunggah gambar: ' + error.message)
+                                                        } finally {
+                                                            setIsUploadingImageContent(false)
+                                                        }
+                                                    }}
+                                                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed" />
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <textarea id="material-content-textarea" required rows={12} value={materialData.content} onChange={(e) => setMaterialData({ ...materialData, content: e.target.value })} 
+                                        className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 focus:border-purple-500 outline-none" 
+                                        placeholder="Tuliskan materi di sini... Anda bisa menggunakan Markdown (seperti **tebal** atau ## Heading) dan $...$ untuk LaTeX."></textarea>
+                                    <p className="text-xs text-slate-500 mt-2">💡 Tips: Anda dapat menyisipkan gambar langsung ke dalam tulisan menggunakan tombol di atas.</p>
                                 </div>
                             </div>
                         )}
