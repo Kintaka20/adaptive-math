@@ -28,7 +28,7 @@ export default function TambahSoalPage() {
         difficulty: 'MEDIUM',
         type: 'multiple_choice',
         question: '',
-        image: null as File | null,
+        imageUrl: '',
         explanation: '',
         estimatedTime: 3,
         points: 10,
@@ -123,6 +123,7 @@ export default function TambahSoalPage() {
                 text: formData.question,
                 difficulty: formData.difficulty,
                 explanation: formData.explanation || undefined,
+                imageUrl: formData.imageUrl || undefined,
                 chapterId: formData.chapterId || undefined,
                 grade: formData.grade || undefined,
                 isSystem: false,
@@ -138,12 +139,6 @@ export default function TambahSoalPage() {
         }
     }
 
-    const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0]
-        if (file && file.size <= 5 * 1024 * 1024) { // 5MB max
-            setFormData(prev => ({ ...prev, image: file }))
-        }
-    }
 
     return (
         <div className="max-w-4xl mx-auto space-y-6 pb-20 lg:pb-0">
@@ -323,40 +318,19 @@ export default function TambahSoalPage() {
                         </div>
                     )}
 
-                    {/* Image Upload */}
+                    {/* Image URL */}
                     <div className="mt-4">
                         <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                            📷 Gambar Soal (Opsional)
+                            📷 URL Gambar Soal (Opsional)
                         </label>
-                        <div className="relative border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-xl p-6 text-center hover:border-amber-500 transition-colors">
-                            {formData.image ? (
-                                <div className="flex items-center justify-center gap-4">
-                                    <img src={URL.createObjectURL(formData.image)} alt="Preview" className="h-20 rounded-lg" />
-                                    <div>
-                                        <p className="text-sm font-medium">{formData.image.name}</p>
-                                        <button
-                                            type="button"
-                                            onClick={() => setFormData(prev => ({ ...prev, image: null }))}
-                                            className="text-red-500 text-sm hover:underline"
-                                        >
-                                            ✕ Hapus
-                                        </button>
-                                    </div>
-                                </div>
-                            ) : (
-                                <>
-                                    <span className="material-symbols-outlined text-4xl text-slate-300">image</span>
-                                    <p className="text-slate-500 mt-2">Klik atau drag & drop gambar di sini</p>
-                                    <p className="text-xs text-slate-400">Format: JPG, PNG, GIF (Max 5MB)</p>
-                                    <input
-                                        type="file"
-                                        accept="image/*"
-                                        onChange={handleImageUpload}
-                                        className="absolute inset-0 opacity-0 cursor-pointer"
-                                    />
-                                </>
-                            )}
-                        </div>
+                        <input
+                            type="url"
+                            value={formData.imageUrl}
+                            onChange={(e) => setFormData(prev => ({ ...prev, imageUrl: e.target.value }))}
+                            placeholder="Contoh: https://imgur.com/xxx.png"
+                            className="w-full px-4 py-3 rounded-xl border-2 transition-all border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 focus:border-amber-500 focus:ring-4 focus:ring-amber-500/20 outline-none"
+                        />
+                        <p className="text-xs text-slate-500 mt-2">💡 Anda dapat mengunggah gambar ke layanan seperti Imgur atau Postimages, lalu tempelkan link gambarnya di sini.</p>
                     </div>
                 </div>
 

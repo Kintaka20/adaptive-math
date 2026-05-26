@@ -36,7 +36,6 @@ export default function ContentEditorPage() {
     const [chapters, setChapters] = useState<Chapter[]>([])
     const [contentType, setContentType] = useState<'material' | 'quiz'>('material')
     const [materialMode, setMaterialMode] = useState<'manual' | 'import'>('manual')
-    const [quizMode, setQuizMode] = useState<'manual' | 'import'>('manual')
     
     const [isLoading, setIsLoading] = useState(false)
     const [error, setError] = useState('')
@@ -69,20 +68,35 @@ export default function ContentEditorPage() {
     const [allChapters, setAllChapters] = useState<any[]>([])
 
     // Manual Quiz Question states
-    const [questionData, setQuestionData] = useState({
+    interface ManualQuestionForm {
+        id: string;
+        difficulty: string;
+        question: string;
+        explanation: string;
+        imageUrl: string;
+        answers: { id: string, text: string }[];
+        correctAnswer: string;
+        showPreview: boolean;
+    }
+
+    const createEmptyQuestion = (): ManualQuestionForm => ({
+        id: Math.random().toString(36).substring(7),
         difficulty: 'MEDIUM',
         question: '',
         explanation: '',
-    })
-    const [answers, setAnswers] = useState<{id: string, text: string}[]>([
-        { id: 'A', text: '' },
-        { id: 'B', text: '' },
-        { id: 'C', text: '' },
-        { id: 'D', text: '' },
-        { id: 'E', text: '' },
-    ])
-    const [correctAnswer, setCorrectAnswer] = useState<string>('A')
-    const [showQuestionPreview, setShowQuestionPreview] = useState(false)
+        imageUrl: '',
+        answers: [
+            { id: 'A', text: '' },
+            { id: 'B', text: '' },
+            { id: 'C', text: '' },
+            { id: 'D', text: '' },
+            { id: 'E', text: '' },
+        ],
+        correctAnswer: 'A',
+        showPreview: false,
+    });
+
+    const [manualQuestions, setManualQuestions] = useState<ManualQuestionForm[]>([createEmptyQuestion()]);
 
     const latexButtons = [
         { label: 'Σ', value: '$\\sum_{}^{}$' },
@@ -97,13 +111,20 @@ export default function ContentEditorPage() {
         { label: 'xₙ', value: '$x_{n}$' },
     ]
 
-    const insertLatex = (latex: string) => {
-        const textarea = document.getElementById('question-textarea') as HTMLTextAreaElement
+    const insertLatex = (latex: string, qId: string) => {
+        const textarea = document.getElementById('question-textarea-' + qId) as HTMLTextAreaElement
         if (textarea) {
             const start = textarea.selectionStart
             const end = textarea.selectionEnd
-            const newText = questionData.question.substring(0, start) + latex + questionData.question.substring(end)
-            setQuestionData(prev => ({ ...prev, question: newText }))
+            
+            setManualQuestions(prev => prev.map(q => {
+                if (q.id === qId) {
+                    const newText = q.question.substring(0, start) + latex + q.question.substring(end)
+                    return { ...q, question: newText }
+                }
+                return q;
+            }))
+            
             setTimeout(() => {
                 textarea.focus()
                 textarea.setSelectionRange(start + latex.length, start + latex.length)
@@ -168,52 +189,57 @@ export default function ContentEditorPage() {
                     // ... assignment logic
                 }
             } else {
-                if (quizMode === 'manual') {
-                    if (!questionData.question || questionData.question.length < 10) throw new Error('Soal minimal 10 karakter')
-                    const filledAnswers = answers.filter(a => a.text.trim())
-                    if (filledAnswers.length < 2) throw new Error('Minimal 2 pilihan jawaban')
-                    const correctOpt = answers.find(a => a.id === correctAnswer)
-                    if (!correctOpt?.text.trim()) throw new Error('Pilih jawaban yang benar')
+                // Combined mode for quiz
+                const validManualQs = manualQuestions.filter(q => q.question.trim().length >= 10)
 
-                    const newQuiz = await quizApi.create({
-                        ...quizData,
-                        isSystem: false,
-                        status: 'PUBLISHED',
-                        order: 1
-                    })
+                if (validManualQs.length === 0 && selectedQuestions.length === 0) {
+                    throw new Error('Minimal harus ada 1 soal (dari bank atau buat baru dengan minimal 10 karakter)')
+                }
 
-                    const options = answers
+                // Validate manual questions
+                for (const mq of validManualQs) {
+                    const filled = mq.answers.filter(a => a.text.trim())
+                    if (filled.length < 2) throw new Error('Soal baru minimal 2 pilihan jawaban')
+                    const correctOpt = mq.answers.find(a => a.id === mq.correctAnswer)
+                    if (!correctOpt?.text.trim()) throw new Error('Pilih jawaban yang benar untuk semua soal baru')
+                }
+
+                const newQuiz = await quizApi.create({
+                    ...quizData,
+                    isSystem: false,
+                    status: 'PUBLISHED',
+                    order: 1
+                })
+
+                const newQuestionIds: string[] = []
+                for (const mq of validManualQs) {
+                    const options = mq.answers
                         .filter(a => a.text.trim())
                         .map(a => ({
                             label: a.id,
                             text: a.text,
-                            isCorrect: a.id === correctAnswer,
+                            isCorrect: a.id === mq.correctAnswer,
                         }))
 
                     const newQuestion = await questionApi.create({
-                        text: questionData.question,
-                        difficulty: questionData.difficulty,
-                        explanation: questionData.explanation || undefined,
+                        text: mq.question,
+                        difficulty: mq.difficulty,
+                        explanation: mq.explanation || undefined,
+                        imageUrl: mq.imageUrl || undefined,
                         chapterId: quizData.chapterId || undefined,
                         isSystem: false,
                         options,
                     })
-
-                    await questionApi.importToQuiz(newQuiz.id, [newQuestion.id])
-                    navigate(`/guru/kelas/${quizData.chapterId}/content/${newQuiz.id}/review`)
-                    return
-                } else {
-                    if (selectedQuestions.length === 0) throw new Error('Pilih minimal 1 soal')
-                    const newQuiz = await quizApi.create({
-                        ...quizData,
-                        isSystem: false,
-                        status: 'PUBLISHED',
-                        order: 1
-                    })
-                    await questionApi.importToQuiz(newQuiz.id, selectedQuestions)
-                    navigate(`/guru/kelas/${quizData.chapterId}/content/${newQuiz.id}/review`)
-                    return
+                    newQuestionIds.push(newQuestion.id)
                 }
+
+                const allQIds = [...selectedQuestions, ...newQuestionIds]
+                if (allQIds.length > 0) {
+                    await questionApi.importToQuiz(newQuiz.id, allQIds)
+                }
+                
+                navigate(`/guru/kelas/${quizData.chapterId}/content/${newQuiz.id}/review`)
+                return
             }
             
             navigate(`/guru/kelas/${classId}`)
@@ -349,203 +375,187 @@ export default function ContentEditorPage() {
 
                 {contentType === 'quiz' && (
                     <div className="space-y-6">
-                        <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-6">
-                            <h2 className="font-bold text-slate-900 dark:text-white mb-4">Sumber Kuis</h2>
-                            <div className="flex gap-4">
-                                <button type="button" onClick={() => setQuizMode('manual')}
-                                    className={`flex-1 p-4 rounded-xl border-2 transition-all ${quizMode === 'manual' ? 'border-amber-500 bg-amber-50 dark:bg-amber-900/20' : 'border-slate-200 dark:border-slate-700 hover:border-amber-300'}`}>
-                                    <span className="material-symbols-outlined text-2xl text-amber-500 mb-1">edit</span>
-                                    <h3 className="font-bold text-slate-900 dark:text-white">Buat Kuis & Soal Baru</h3>
-                                </button>
-                                <button type="button" onClick={() => setQuizMode('import')}
-                                    className={`flex-1 p-4 rounded-xl border-2 transition-all ${quizMode === 'import' ? 'border-amber-500 bg-amber-50 dark:bg-amber-900/20' : 'border-slate-200 dark:border-slate-700 hover:border-amber-300'}`}>
-                                    <span className="material-symbols-outlined text-2xl text-amber-500 mb-1">library_books</span>
-                                    <h3 className="font-bold text-slate-900 dark:text-white">Ambil Soal dari Bank</h3>
-                                </button>
-                            </div>
-                        </div>
-
                         <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-6 space-y-4">
-                            <div>
-                                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Judul Kuis *</label>
-                                <input required type="text" value={quizData.title} onChange={(e) => setQuizData({ ...quizData, title: e.target.value })} className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900" />
+                            <h2 className="font-bold text-slate-900 dark:text-white mb-2">Pilih Soal dari Bank</h2>
+                            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
+                                <div className="flex gap-2 w-full sm:w-auto">
+                                    <select 
+                                        value={questionFilter.chapter}
+                                        onChange={(e) => setQuestionFilter({ ...questionFilter, chapter: e.target.value })}
+                                        className="px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-sm flex-1 sm:flex-none"
+                                    >
+                                        <option value="">Semua Bab</option>
+                                        {Array.from(new Set(bankQuestions.map(q => allChapters.find(c => c.id === q.chapterId)?.name).filter(Boolean))).map(chapterName => (
+                                            <option key={chapterName as string} value={chapterName as string}>{chapterName as string}</option>
+                                        ))}
+                                    </select>
+                                    <select 
+                                        value={questionFilter.difficulty}
+                                        onChange={(e) => setQuestionFilter({ ...questionFilter, difficulty: e.target.value })}
+                                        className="px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-sm flex-1 sm:flex-none"
+                                    >
+                                        <option value="">Semua Kesulitan</option>
+                                        <option value="EASY">Mudah</option>
+                                        <option value="MEDIUM">Sedang</option>
+                                        <option value="HARD">Sulit</option>
+                                    </select>
+                                </div>
                             </div>
-                            <div>
-                                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Bab *</label>
-                                <select required value={quizData.chapterId} onChange={(e) => {
-                                    const newChapterId = e.target.value;
-                                    setQuizData({ ...quizData, chapterId: newChapterId });
-                                    const matched = chapters.find(c => c.id === newChapterId);
-                                    if (matched) {
-                                        setQuestionFilter(prev => ({ ...prev, chapter: matched.name }));
-                                    } else {
-                                        setQuestionFilter(prev => ({ ...prev, chapter: '' }));
-                                    }
-                                }} className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900">
-                                    <option value="">Pilih Bab</option>
-                                    {chapters.map(ch => <option key={ch.id} value={ch.id}>{ch.name}</option>)}
-                                </select>
+                            <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2">
+                                {bankQuestions
+                                    .filter(q => {
+                                        if (questionFilter.chapter) {
+                                            const chapterName = allChapters.find(c => c.id === q.chapterId)?.name
+                                            if (chapterName !== questionFilter.chapter) return false
+                                        }
+                                        if (questionFilter.difficulty && q.difficulty !== questionFilter.difficulty) return false
+                                        return true
+                                    })
+                                    .map(q => (
+                                    <label key={q.id} className={`flex items-start gap-3 p-4 rounded-xl border cursor-pointer transition-colors ${selectedQuestions.includes(q.id) ? 'border-amber-500 bg-amber-50 dark:bg-amber-900/20' : 'border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800'}`}>
+                                        <input type="checkbox" checked={selectedQuestions.includes(q.id)} onChange={() => toggleSelectQuestion(q.id)} className="mt-1 w-4 h-4 text-amber-600 rounded border-slate-300 focus:ring-amber-500" />
+                                        <div className="flex-1">
+                                            <div className="flex items-center gap-2 mb-2">
+                                                <span className={`text-xs font-bold px-2 py-1 rounded-lg ${q.difficulty === 'EASY' ? 'bg-emerald-100 text-emerald-700' : q.difficulty === 'MEDIUM' ? 'bg-amber-100 text-amber-700' : 'bg-red-100 text-red-700'}`}>
+                                                    {q.difficulty}
+                                                </span>
+                                                <span className="text-xs text-slate-500">{allChapters.find(c => c.id === q.chapterId)?.name}</span>
+                                            </div>
+                                            <LatexRenderer content={q.text} />
+                                        </div>
+                                    </label>
+                                ))}
+                                {bankQuestions.length === 0 && (
+                                    <div className="text-center py-8 text-slate-500">Belum ada soal di bank soal</div>
+                                )}
                             </div>
                         </div>
 
-                        {quizMode === 'manual' && (
-                            <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-6 space-y-6">
-                                <h2 className="font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
-                                    <span className="material-symbols-outlined text-primary">edit_note</span>
-                                    Soal Pertama
-                                </h2>
-                                
-                                <div>
-                                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">⚡ Kesulitan *</label>
-                                    <div className="flex gap-2">
-                                        {[
-                                            { value: 'EASY', label: '🟢 Easy' },
-                                            { value: 'MEDIUM', label: '🟡 Medium' },
-                                            { value: 'HARD', label: '🔴 Hard' },
-                                        ].map(d => (
-                                            <button key={d.value} type="button" onClick={() => setQuestionData(prev => ({ ...prev, difficulty: d.value }))}
-                                                className={`flex-1 py-2 px-3 rounded-xl border-2 text-sm font-medium transition-all ${questionData.difficulty === d.value
-                                                    ? 'border-amber-500 bg-amber-50 dark:bg-amber-900/20 text-amber-600'
-                                                    : 'border-slate-200 dark:border-slate-700'
-                                                    }`}>
-                                                {d.label}
+                        <div className="space-y-6">
+                            {manualQuestions.map((mq, mqIndex) => (
+                                <div key={mq.id} className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-6 space-y-6">
+                                    <div className="flex justify-between items-center mb-4 border-b border-slate-200 dark:border-slate-700 pb-4">
+                                        <h2 className="font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                                            <span className="material-symbols-outlined text-primary">edit_note</span>
+                                            Buat Soal Baru #{mqIndex + 1}
+                                        </h2>
+                                        {manualQuestions.length > 1 && (
+                                            <button type="button" onClick={() => setManualQuestions(prev => prev.filter(q => q.id !== mq.id))}
+                                                className="text-red-500 hover:text-red-600 text-sm font-medium flex items-center gap-1">
+                                                <span className="material-symbols-outlined text-sm">delete</span> Hapus
                                             </button>
-                                        ))}
+                                        )}
                                     </div>
-                                </div>
-
-                                <div>
-                                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Konten Soal *</label>
-                                    <div className="flex flex-wrap gap-2 mb-3 p-2 bg-slate-50 dark:bg-slate-900 rounded-xl">
-                                        <div className="flex gap-1 flex-wrap">
-                                            {latexButtons.map(btn => (
-                                                <button key={btn.label} type="button" onClick={() => insertLatex(btn.value)}
-                                                    className="px-2 py-1.5 rounded-lg hover:bg-amber-100 dark:hover:bg-amber-900/30 text-amber-700 dark:text-amber-400 text-sm font-mono">
-                                                    {btn.label}
-                                                </button>
-                                            ))}
-                                        </div>
-                                        <div className="w-px bg-slate-300 dark:bg-slate-600" />
-                                        <button type="button" onClick={() => setShowQuestionPreview(!showQuestionPreview)}
-                                            className={`px-3 py-1.5 rounded-lg text-sm font-medium ${showQuestionPreview ? 'bg-primary text-white' : 'hover:bg-slate-200 dark:hover:bg-slate-700'}`}>
-                                            {showQuestionPreview ? '👁️ Preview ON' : '👁️ Preview'}
-                                        </button>
-                                    </div>
-
-                                    <textarea id="question-textarea" value={questionData.question}
-                                        onChange={(e) => setQuestionData(prev => ({ ...prev, question: e.target.value }))}
-                                        placeholder="Tulis soal dengan LaTeX..."
-                                        rows={4}
-                                        className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 focus:border-amber-500 outline-none" />
                                     
-                                    {showQuestionPreview && questionData.question && (
-                                        <div className="mt-4 p-4 bg-slate-50 dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700">
-                                            <p className="text-xs text-slate-500 mb-2">Preview:</p>
-                                            <LatexRenderer content={questionData.question} />
-                                        </div>
-                                    )}
-                                </div>
-
-                                <div>
-                                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Pilihan Jawaban *</label>
-                                    <div className="space-y-3">
-                                        {answers.map((answer, index) => (
-                                            <div key={answer.id} className="flex items-center gap-3">
-                                                <button type="button" onClick={() => setCorrectAnswer(answer.id)}
-                                                    className={`size-8 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all ${correctAnswer === answer.id
-                                                        ? 'border-emerald-500 bg-emerald-500 text-white'
-                                                        : 'border-slate-300 dark:border-slate-600 hover:border-emerald-500'
+                                    <div>
+                                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">⚡ Kesulitan *</label>
+                                        <div className="flex gap-2">
+                                            {[
+                                                { value: 'EASY', label: '🟢 Easy' },
+                                                { value: 'MEDIUM', label: '🟡 Medium' },
+                                                { value: 'HARD', label: '🔴 Hard' },
+                                            ].map(d => (
+                                                <button key={d.value} type="button" onClick={() => setManualQuestions(prev => prev.map(q => q.id === mq.id ? { ...q, difficulty: d.value } : q))}
+                                                    className={`flex-1 py-2 px-3 rounded-xl border-2 text-sm font-medium transition-all ${mq.difficulty === d.value
+                                                        ? 'border-amber-500 bg-amber-50 dark:bg-amber-900/20 text-amber-600'
+                                                        : 'border-slate-200 dark:border-slate-700'
                                                         }`}>
-                                                    {correctAnswer === answer.id && <span className="material-symbols-outlined text-sm">check</span>}
+                                                    {d.label}
                                                 </button>
-                                                <span className="font-bold text-slate-500 w-6">{answer.id}.</span>
-                                                <input type="text" value={answer.text}
-                                                    onChange={(e) => {
-                                                        const newAnswers = [...answers]
-                                                        newAnswers[index].text = e.target.value
-                                                        setAnswers(newAnswers)
-                                                    }}
-                                                    placeholder={`Jawaban ${answer.id}...`}
-                                                    className="flex-1 px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 focus:border-amber-500 outline-none" />
-                                            </div>
-                                        ))}
-                                    </div>
-                                    <p className="text-xs text-slate-500 mt-3">💡 Klik lingkaran untuk menandai jawaban yang benar</p>
-                                </div>
-
-                                <div>
-                                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Pembahasan (Opsional)</label>
-                                    <textarea value={questionData.explanation}
-                                        onChange={(e) => setQuestionData(prev => ({ ...prev, explanation: e.target.value }))}
-                                        placeholder="Penjelasan jawaban yang benar..."
-                                        rows={3}
-                                        className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 focus:border-amber-500 outline-none" />
-                                </div>
-                            </div>
-                        )}
-
-                        {quizMode === 'import' && (
-                            <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-6">
-                                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
-                                    <h3 className="font-bold">Pilih Soal dari Bank</h3>
-                                    <div className="flex gap-2 w-full sm:w-auto">
-                                        <select 
-                                            value={questionFilter.chapter}
-                                            onChange={(e) => setQuestionFilter({ ...questionFilter, chapter: e.target.value })}
-                                            className="px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-sm flex-1 sm:flex-none"
-                                        >
-                                            <option value="">Semua Bab</option>
-                                            {Array.from(new Set(bankQuestions.map(q => allChapters.find(c => c.id === q.chapterId)?.name).filter(Boolean))).map(chapterName => (
-                                                <option key={chapterName as string} value={chapterName as string}>{chapterName as string}</option>
                                             ))}
-                                        </select>
-                                        <select 
-                                            value={questionFilter.difficulty}
-                                            onChange={(e) => setQuestionFilter({ ...questionFilter, difficulty: e.target.value })}
-                                            className="px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-sm flex-1 sm:flex-none"
-                                        >
-                                            <option value="">Semua Kesulitan</option>
-                                            <option value="EASY">Mudah</option>
-                                            <option value="MEDIUM">Sedang</option>
-                                            <option value="HARD">Sulit</option>
-                                        </select>
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">URL Gambar (Opsional)</label>
+                                        <input type="url" value={mq.imageUrl}
+                                            onChange={(e) => setManualQuestions(prev => prev.map(q => q.id === mq.id ? { ...q, imageUrl: e.target.value } : q))}
+                                            placeholder="Contoh: https://imgur.com/xxx.png"
+                                            className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 focus:border-amber-500 outline-none" />
+                                        <p className="text-xs text-slate-500 mt-2">💡 Anda dapat mengunggah gambar ke layanan seperti Imgur atau Postimages, lalu tempelkan link gambarnya di sini.</p>
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Konten Soal *</label>
+                                        <div className="flex flex-wrap gap-2 mb-3 p-2 bg-slate-50 dark:bg-slate-900 rounded-xl">
+                                            <div className="flex gap-1 flex-wrap">
+                                                {latexButtons.map(btn => (
+                                                    <button key={btn.label} type="button" onClick={() => insertLatex(btn.value, mq.id)}
+                                                        className="px-2 py-1.5 rounded-lg hover:bg-amber-100 dark:hover:bg-amber-900/30 text-amber-700 dark:text-amber-400 text-sm font-mono">
+                                                        {btn.label}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                            <div className="w-px bg-slate-300 dark:bg-slate-600" />
+                                            <button type="button" onClick={() => setManualQuestions(prev => prev.map(q => q.id === mq.id ? { ...q, showPreview: !q.showPreview } : q))}
+                                                className={`px-3 py-1.5 rounded-lg text-sm font-medium ${mq.showPreview ? 'bg-primary text-white' : 'hover:bg-slate-200 dark:hover:bg-slate-700'}`}>
+                                                {mq.showPreview ? '👁️ Preview ON' : '👁️ Preview'}
+                                            </button>
+                                        </div>
+
+                                        <textarea id={`question-textarea-${mq.id}`} value={mq.question}
+                                            onChange={(e) => setManualQuestions(prev => prev.map(q => q.id === mq.id ? { ...q, question: e.target.value } : q))}
+                                            placeholder="Tulis soal dengan LaTeX..."
+                                            rows={4}
+                                            className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 focus:border-amber-500 outline-none" />
+                                        
+                                        {mq.showPreview && mq.question && (
+                                            <div className="mt-4 p-4 bg-slate-50 dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700">
+                                                <p className="text-xs text-slate-500 mb-2">Preview:</p>
+                                                <LatexRenderer content={mq.question} />
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Pilihan Jawaban *</label>
+                                        <div className="space-y-3">
+                                            {mq.answers.map((answer, index) => (
+                                                <div key={answer.id} className="flex items-center gap-3">
+                                                    <button type="button" onClick={() => setManualQuestions(prev => prev.map(q => q.id === mq.id ? { ...q, correctAnswer: answer.id } : q))}
+                                                        className={`size-8 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all ${mq.correctAnswer === answer.id
+                                                            ? 'border-emerald-500 bg-emerald-500 text-white'
+                                                            : 'border-slate-300 dark:border-slate-600 hover:border-emerald-500'
+                                                            }`}>
+                                                        {mq.correctAnswer === answer.id && <span className="material-symbols-outlined text-sm">check</span>}
+                                                    </button>
+                                                    <span className="font-bold text-slate-500 w-6">{answer.id}.</span>
+                                                    <input type="text" value={answer.text}
+                                                        onChange={(e) => {
+                                                            setManualQuestions(prev => prev.map(q => {
+                                                                if (q.id === mq.id) {
+                                                                    const newAnswers = [...q.answers]
+                                                                    newAnswers[index].text = e.target.value
+                                                                    return { ...q, answers: newAnswers }
+                                                                }
+                                                                return q
+                                                            }))
+                                                        }}
+                                                        placeholder={`Jawaban ${answer.id}...`}
+                                                        className="flex-1 px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 focus:border-amber-500 outline-none" />
+                                                </div>
+                                            ))}
+                                        </div>
+                                        <p className="text-xs text-slate-500 mt-3">💡 Klik lingkaran untuk menandai jawaban yang benar</p>
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Pembahasan (Opsional)</label>
+                                        <textarea value={mq.explanation}
+                                            onChange={(e) => setManualQuestions(prev => prev.map(q => q.id === mq.id ? { ...q, explanation: e.target.value } : q))}
+                                            placeholder="Penjelasan jawaban yang benar..."
+                                            rows={3}
+                                            className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 focus:border-amber-500 outline-none" />
                                     </div>
                                 </div>
-                                <div className="space-y-3 max-h-[500px] overflow-y-auto pr-2">
-                                    {bankQuestions.filter(q => {
-                                        const chapterName = allChapters.find(c => c.id === q.chapterId)?.name;
-                                        if (questionFilter.chapter && chapterName !== questionFilter.chapter) return false;
-                                        if (questionFilter.difficulty && q.difficulty !== questionFilter.difficulty) return false;
-                                        return true;
-                                    }).map(q => {
-                                        const chapterName = allChapters.find(c => c.id === q.chapterId)?.name;
-                                        return (
-                                        <label key={q.id} className={`flex items-start gap-3 p-4 rounded-xl border cursor-pointer transition-colors ${selectedQuestions.includes(q.id) ? 'border-amber-500 bg-amber-50' : 'border-slate-200 hover:bg-slate-50'}`}>
-                                            <input type="checkbox" checked={selectedQuestions.includes(q.id)} onChange={() => toggleSelectQuestion(q.id)} className="w-4 h-4 mt-1 text-amber-600 rounded" />
-                                            <div className="flex-1">
-                                                <LatexRenderer content={q.text} />
-                                                <div className="flex gap-2 mt-2">
-                                                    <span className="text-xs px-2 py-1 bg-slate-100 rounded-md text-slate-600">{q.difficulty}</span>
-                                                    {chapterName && <span className="text-xs px-2 py-1 bg-slate-100 rounded-md text-slate-600">{chapterName}</span>}
-                                                </div>
-                                            </div>
-                                            <button 
-                                                type="button"
-                                                onClick={(e) => {
-                                                    e.preventDefault();
-                                                    e.stopPropagation();
-                                                    setPreviewQuestion(q);
-                                                }}
-                                                className="p-2 text-slate-400 hover:text-primary hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
-                                                title="Lihat Detail Soal"
-                                            >
-                                                <span className="material-symbols-outlined text-sm">visibility</span>
-                                            </button>
-                                        </label>
-                                    )})}
-                                </div>
-                            </div>
-                        )}
+                            ))}
+                            
+                            <button type="button" onClick={() => setManualQuestions(prev => [...prev, createEmptyQuestion()])}
+                                className="w-full py-4 border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-2xl text-slate-500 hover:text-primary hover:border-primary hover:bg-amber-50 dark:hover:bg-slate-800 transition-all flex items-center justify-center gap-2 font-medium">
+                                <span className="material-symbols-outlined">add_circle</span> Tambah Soal Lain
+                            </button>
+                        </div>
+
                     </div>
                 )}
 

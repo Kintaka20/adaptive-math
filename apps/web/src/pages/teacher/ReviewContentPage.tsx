@@ -326,6 +326,16 @@ export default function ReviewContentPage() {
                                             <p className="text-slate-500">Belum ada soal dalam kuis ini.</p>
                                         </div>
                                     )}
+                                    <div className="pt-4 border-t border-slate-200 dark:border-slate-700 flex justify-center">
+                                        <button
+                                            type="button"
+                                            onClick={() => window.alert('Fitur Kelola Soal (Bank/Manual) akan segera hadir!')}
+                                            className="flex items-center gap-2 px-6 py-3 rounded-xl border-2 border-dashed border-amber-300 dark:border-amber-700 text-amber-600 dark:text-amber-500 font-medium hover:bg-amber-50 dark:hover:bg-amber-900/20 transition-all"
+                                        >
+                                            <span className="material-symbols-outlined">add_circle</span>
+                                            Kelola & Tambah Soal Kuis
+                                        </button>
+                                    </div>
                                 </div>
                             )}
                         </div>
