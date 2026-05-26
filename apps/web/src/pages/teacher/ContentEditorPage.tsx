@@ -375,20 +375,20 @@ export default function ContentEditorPage() {
                                     </div>
                                 </div>
 
-                                {/* Video Upload */}
+                                {/* Main Media Upload */}
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">🎥 Video Materi (Opsional)</label>
+                                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">🎥 Media Utama (Video / Gambar) (Opsional)</label>
                                     <div className="flex gap-3">
                                         <input type="url" value={materialData.videoUrl}
                                             onChange={(e) => setMaterialData({ ...materialData, videoUrl: e.target.value })}
-                                            placeholder="Tempel URL Video (YouTube/Lainnya) atau upload file..."
+                                            placeholder="Tempel URL Video/Gambar atau upload file..."
                                             className="flex-1 px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 focus:border-purple-500 outline-none" />
                                         <div className="relative">
                                             <button type="button" disabled={isUploadingVideo} className="h-full px-6 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-medium rounded-xl border border-slate-200 dark:border-slate-700 transition-all flex items-center gap-2">
                                                 <span className="material-symbols-outlined text-xl">{isUploadingVideo ? 'hourglass_empty' : 'upload_file'}</span>
                                                 {isUploadingVideo ? 'Mengunggah...' : 'Pilih File'}
                                             </button>
-                                            <input type="file" accept="video/*" disabled={isUploadingVideo}
+                                            <input type="file" accept="video/*,image/*" disabled={isUploadingVideo}
                                                 onChange={async (e) => {
                                                     const file = e.target.files?.[0]
                                                     if (!file) return
@@ -397,7 +397,7 @@ export default function ContentEditorPage() {
                                                         const res = await uploadApi.uploadImage(file)
                                                         setMaterialData({ ...materialData, videoUrl: res.url })
                                                     } catch (error: any) {
-                                                        alert('Gagal mengunggah video: ' + error.message)
+                                                        alert('Gagal mengunggah media: ' + error.message)
                                                     } finally {
                                                         setIsUploadingVideo(false)
                                                     }

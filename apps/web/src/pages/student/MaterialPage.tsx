@@ -180,14 +180,18 @@ export default function MaterialPage() {
                     </div>
                 </div>
 
-                {/* Video */}
+                {/* Media Utama (Video / Image) */}
                 {material.videoUrl && (
                     <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 overflow-hidden">
-                        <div className="aspect-video bg-slate-900">
-                            <iframe src={material.videoUrl} className="w-full h-full"
-                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                allowFullScreen />
-                        </div>
+                        {material.videoUrl.match(/\.(jpeg|jpg|gif|png|webp)$/i) || material.videoUrl.includes('/image/upload/') ? (
+                            <img src={material.videoUrl} alt={material.title} className="w-full h-auto object-cover max-h-[500px]" />
+                        ) : (
+                            <div className="aspect-video bg-slate-900">
+                                <iframe src={material.videoUrl} className="w-full h-full"
+                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                    allowFullScreen />
+                            </div>
+                        )}
                     </div>
                 )}
 
