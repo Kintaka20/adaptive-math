@@ -112,26 +112,28 @@ export default function ContentEditorPage() {
         try {
             if (contentType === 'material') {
                 if (materialMode === 'manual') {
-                    await materialApi.create({
+                    const newMat = await materialApi.create({
                         ...materialData,
                         isSystem: false,
                         status: 'PUBLISHED',
                         order: 1
                     })
+                    navigate(`/guru/kelas/${materialData.chapterId}/content/${newMat.id}/review`)
+                    return
                 } else {
-                    // For import, we'd normally attach the existing material to the class/chapter
-                    // Simulating a success for now since API might just need cloning or assignment
                     if (!selectedMaterial) throw new Error('Pilih materi dari bank terlebih dahulu')
                     // ... assignment logic
                 }
             } else {
                 if (quizMode === 'manual') {
-                    await quizApi.create({
+                    const newQuiz = await quizApi.create({
                         ...quizData,
                         isSystem: false,
                         status: 'PUBLISHED',
                         order: 1
                     })
+                    navigate(`/guru/kelas/${quizData.chapterId}/content/${newQuiz.id}/review`)
+                    return
                 } else {
                     if (selectedQuestions.length === 0) throw new Error('Pilih minimal 1 soal')
                     const newQuiz = await quizApi.create({
@@ -140,8 +142,9 @@ export default function ContentEditorPage() {
                         status: 'PUBLISHED',
                         order: 1
                     })
-                    // Link imported questions
                     await questionApi.importToQuiz(newQuiz.id, selectedQuestions)
+                    navigate(`/guru/kelas/${quizData.chapterId}/content/${newQuiz.id}/review`)
+                    return
                 }
             }
             
