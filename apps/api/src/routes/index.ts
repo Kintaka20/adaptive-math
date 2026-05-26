@@ -12,6 +12,7 @@ import chatRoutes from './chat'
 import adminRoutes from './admin'
 import schoolRoutes from './schools'
 import notificationRoutes from './notifications'
+import uploadRoutes from './upload'
 
 const router = Router()
 
@@ -29,6 +30,7 @@ router.use('/teachers', teacherRoutes)
 router.use('/chat', chatRoutes)
 router.use('/admin', adminRoutes)
 router.use('/notifications', notificationRoutes)
+router.use('/upload', uploadRoutes)
 
 router.get('/health', (_req, res) => {
   res.json({ success: true, message: 'API is running', timestamp: new Date().toISOString() })

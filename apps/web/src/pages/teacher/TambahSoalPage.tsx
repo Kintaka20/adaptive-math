@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { questionApi, adminApi } from '../../lib/api'
+import { questionApi, adminApi, uploadApi } from '../../lib/api'
 import LatexRenderer from '../../components/LatexRenderer'
 
 interface AnswerOption {
@@ -19,6 +19,7 @@ const grades = ['X', 'XI', 'XII']
 export default function TambahSoalPage() {
     const navigate = useNavigate()
     const [isLoading, setIsLoading] = useState(false)
+    const [isUploading, setIsUploading] = useState(false)
     const [showPreview, setShowPreview] = useState(false)
     const [chapters, setChapters] = useState<Chapter[]>([])
 
@@ -139,6 +140,26 @@ export default function TambahSoalPage() {
         }
     }
 
+    const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0]
+        if (!file) return
+
+        if (file.size > 5 * 1024 * 1024) {
+            alert('Ukuran gambar maksimal 5MB')
+            return
+        }
+
+        setIsUploading(true)
+        try {
+            const res = await uploadApi.uploadImage(file)
+            setFormData(prev => ({ ...prev, imageUrl: res.url }))
+        } catch (error: any) {
+            console.error('Failed to upload image:', error)
+            alert(error.message || 'Gagal mengunggah gambar. Pastikan backend sudah dikonfigurasi.')
+        } finally {
+            setIsUploading(false)
+        }
+    }
 
     return (
         <div className="max-w-4xl mx-auto space-y-6 pb-20 lg:pb-0">
@@ -318,19 +339,39 @@ export default function TambahSoalPage() {
                         </div>
                     )}
 
-                    {/* Image URL */}
+                    {/* Image URL / Upload */}
                     <div className="mt-4">
                         <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                            📷 URL Gambar Soal (Opsional)
+                            📷 Gambar Soal (Opsional)
                         </label>
-                        <input
-                            type="url"
-                            value={formData.imageUrl}
-                            onChange={(e) => setFormData(prev => ({ ...prev, imageUrl: e.target.value }))}
-                            placeholder="Contoh: https://imgur.com/xxx.png"
-                            className="w-full px-4 py-3 rounded-xl border-2 transition-all border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 focus:border-amber-500 focus:ring-4 focus:ring-amber-500/20 outline-none"
-                        />
-                        <p className="text-xs text-slate-500 mt-2">💡 Anda dapat mengunggah gambar ke layanan seperti Imgur atau Postimages, lalu tempelkan link gambarnya di sini.</p>
+                        <div className="flex gap-3">
+                            <input
+                                type="url"
+                                value={formData.imageUrl}
+                                onChange={(e) => setFormData(prev => ({ ...prev, imageUrl: e.target.value }))}
+                                placeholder="Pilih file gambar atau tempel URL (https://...)"
+                                className="flex-1 px-4 py-3 rounded-xl border-2 transition-all border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 focus:border-amber-500 focus:ring-4 focus:ring-amber-500/20 outline-none"
+                            />
+                            <div className="relative">
+                                <button type="button" disabled={isUploading} className="h-full px-6 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-medium rounded-xl border-2 border-slate-200 dark:border-slate-700 transition-all flex items-center gap-2">
+                                    <span className="material-symbols-outlined text-xl">{isUploading ? 'hourglass_empty' : 'upload_file'}</span>
+                                    {isUploading ? 'Mengunggah...' : 'Pilih File'}
+                                </button>
+                                <input
+                                    type="file"
+                                    accept="image/*"
+                                    onChange={handleImageUpload}
+                                    disabled={isUploading}
+                                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed"
+                                />
+                            </div>
+                        </div>
+                        {formData.imageUrl && (
+                            <div className="mt-3 p-3 bg-slate-50 dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 inline-block">
+                                <p className="text-xs text-slate-500 mb-2">Preview Gambar:</p>
+                                <img src={formData.imageUrl} alt="Preview" className="max-h-32 rounded-lg object-contain" />
+                            </div>
+                        )}
                     </div>
                 </div>
 

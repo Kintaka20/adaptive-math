@@ -23,8 +23,11 @@ export class ApiError extends Error {
 async function request<T>(path: string, options: RequestOptions = {}): Promise<T> {
     const { method = 'GET', body, auth = true } = options
 
-    const headers: Record<string, string> = {
-        'Content-Type': 'application/json',
+    const headers: Record<string, string> = {}
+    
+    // Only set Content-Type to JSON if body is NOT FormData
+    if (!(body instanceof FormData)) {
+        headers['Content-Type'] = 'application/json'
     }
 
     if (auth) {
@@ -35,7 +38,7 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
     const response = await fetch(`${BASE_URL}${path}`, {
         method,
         headers,
-        body: body ? JSON.stringify(body) : undefined,
+        body: body instanceof FormData ? body : (body ? JSON.stringify(body) : undefined),
     })
 
     const json = (await response.json()) as ApiResponse<T>
@@ -235,4 +238,12 @@ export const adminApi = {
     updateChapter: (id: string, data: unknown) => api.put(`/admin/chapters/${id}`, data),
     deleteChapter: (id: string) => api.delete(`/admin/chapters/${id}`),
     apiLogs: (limit = 50) => api.get<unknown[]>(`/admin/api-logs?limit=${limit}`),
+}
+
+export const uploadApi = {
+    uploadImage: async (file: File) => {
+        const formData = new FormData()
+        formData.append('file', file)
+        return api.post<{ url: string }>('/upload', formData)
+    }
 }

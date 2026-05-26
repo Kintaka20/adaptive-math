@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
-import { materialApi, quizApi, questionApi, classApi, adminApi } from '../../lib/api'
+import { materialApi, quizApi, questionApi, classApi, adminApi, uploadApi } from '../../lib/api'
 import LatexRenderer from '../../components/LatexRenderer'
 
 interface Chapter {
@@ -77,6 +77,7 @@ export default function ContentEditorPage() {
         answers: { id: string, text: string }[];
         correctAnswer: string;
         showPreview: boolean;
+        isUploading?: boolean;
     }
 
     const createEmptyQuestion = (): ManualQuestionForm => ({
@@ -466,13 +467,52 @@ export default function ContentEditorPage() {
                                         </div>
                                     </div>
 
+                                    {/* Image URL / Upload */}
                                     <div>
-                                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">URL Gambar (Opsional)</label>
-                                        <input type="url" value={mq.imageUrl}
-                                            onChange={(e) => setManualQuestions(prev => prev.map(q => q.id === mq.id ? { ...q, imageUrl: e.target.value } : q))}
-                                            placeholder="Contoh: https://imgur.com/xxx.png"
-                                            className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 focus:border-amber-500 outline-none" />
-                                        <p className="text-xs text-slate-500 mt-2">💡 Anda dapat mengunggah gambar ke layanan seperti Imgur atau Postimages, lalu tempelkan link gambarnya di sini.</p>
+                                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Gambar Soal (Opsional)</label>
+                                        <div className="flex gap-3">
+                                            <input type="url" value={mq.imageUrl}
+                                                onChange={(e) => setManualQuestions(prev => prev.map(q => q.id === mq.id ? { ...q, imageUrl: e.target.value } : q))}
+                                                placeholder="Pilih file gambar atau tempel URL (https://...)"
+                                                className="flex-1 px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 focus:border-amber-500 outline-none" />
+                                            <div className="relative">
+                                                <button type="button" disabled={mq.isUploading} className="h-full px-6 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-medium rounded-xl border border-slate-200 dark:border-slate-700 transition-all flex items-center gap-2">
+                                                    <span className="material-symbols-outlined text-xl">{mq.isUploading ? 'hourglass_empty' : 'upload_file'}</span>
+                                                    {mq.isUploading ? 'Mengunggah...' : 'Pilih File'}
+                                                </button>
+                                                <input
+                                                    type="file"
+                                                    accept="image/*"
+                                                    disabled={mq.isUploading}
+                                                    onChange={async (e) => {
+                                                        const file = e.target.files?.[0]
+                                                        if (!file) return
+                                                        if (file.size > 5 * 1024 * 1024) {
+                                                            alert('Ukuran gambar maksimal 5MB')
+                                                            return
+                                                        }
+                                                        
+                                                        setManualQuestions(prev => prev.map(q => q.id === mq.id ? { ...q, isUploading: true } : q))
+                                                        try {
+                                                            const res = await uploadApi.uploadImage(file)
+                                                            setManualQuestions(prev => prev.map(q => q.id === mq.id ? { ...q, imageUrl: res.url } : q))
+                                                        } catch (error: any) {
+                                                            console.error('Failed to upload image:', error)
+                                                            alert(error.message || 'Gagal mengunggah gambar. Pastikan backend sudah dikonfigurasi.')
+                                                        } finally {
+                                                            setManualQuestions(prev => prev.map(q => q.id === mq.id ? { ...q, isUploading: false } : q))
+                                                        }
+                                                    }}
+                                                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed"
+                                                />
+                                            </div>
+                                        </div>
+                                        {mq.imageUrl && (
+                                            <div className="mt-3 p-3 bg-slate-50 dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 inline-block">
+                                                <p className="text-xs text-slate-500 mb-2">Preview Gambar:</p>
+                                                <img src={mq.imageUrl} alt="Preview" className="max-h-32 rounded-lg object-contain" />
+                                            </div>
+                                        )}
                                     </div>
 
                                     <div>
