@@ -16,6 +16,7 @@ type ContentData = {
     description?: string
     content?: string
     videoUrl?: string
+    pdfUrl?: string
     questionCount?: number
     questions?: any[]
 }
@@ -54,6 +55,7 @@ export default function ReviewContentPage() {
                     description: m.description,
                     content: m.content || '',
                     videoUrl: m.videoUrl,
+                    pdfUrl: m.pdfUrl,
                 })
                 setEditedContent(m.content || '')
                 return
@@ -279,6 +281,31 @@ export default function ReviewContentPage() {
                                                     </video>
                                                 </div>
                                             )}
+                                        </div>
+                                    )}
+
+                                    {content.pdfUrl && !isEditing && (
+                                        <div className="mt-6">
+                                            <h3 className="font-bold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
+                                                <span className="material-symbols-outlined text-purple-500">attach_file</span>
+                                                Lampiran Dokumen
+                                            </h3>
+                                            <div className="rounded-xl border border-slate-200 dark:border-slate-700 p-4 bg-slate-50 dark:bg-slate-800/50 flex items-center justify-between">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="size-10 bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 rounded-lg flex items-center justify-center">
+                                                        <span className="material-symbols-outlined">description</span>
+                                                    </div>
+                                                    <div>
+                                                        <p className="font-medium text-slate-900 dark:text-white">Dokumen Pendukung</p>
+                                                        <p className="text-xs text-slate-500">Klik tombol di samping untuk membuka dokumen</p>
+                                                    </div>
+                                                </div>
+                                                <button onClick={() => window.open(content.pdfUrl, '_blank')}
+                                                    className="px-4 py-2 bg-purple-500 hover:bg-purple-600 text-white rounded-lg text-sm font-medium transition-colors flex items-center gap-2">
+                                                    <span className="material-symbols-outlined text-sm">open_in_new</span>
+                                                    Buka
+                                                </button>
+                                            </div>
                                         </div>
                                     )}
                                 </div>
