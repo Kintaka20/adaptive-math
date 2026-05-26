@@ -259,17 +259,25 @@ export default function ReviewContentPage() {
                                     {content.videoUrl && !isEditing && (
                                         <div className="mt-6">
                                             <h3 className="font-bold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
-                                                <span className="material-symbols-outlined text-red-500">play_circle</span>
-                                                Video Pembelajaran
+                                                <span className="material-symbols-outlined text-red-500">
+                                                    {content.videoUrl.match(/\.(jpeg|jpg|gif|png|webp)$/i) != null ? 'image' : 'play_circle'}
+                                                </span>
+                                                {content.videoUrl.match(/\.(jpeg|jpg|gif|png|webp)$/i) != null ? 'Gambar Materi' : 'Video Pembelajaran'}
                                             </h3>
-                                            <div className="aspect-video bg-slate-900 rounded-xl overflow-hidden">
-                                                <div className="w-full h-full flex items-center justify-center bg-slate-800">
-                                                    <div className="text-center text-white">
-                                                        <span className="material-symbols-outlined text-5xl mb-2">play_circle</span>
-                                                        <p className="text-sm text-slate-400">{content.videoUrl}</p>
+                                            {content.videoUrl.match(/\.(jpeg|jpg|gif|png|webp)$/i) != null ? (
+                                                <div className="rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700 flex justify-center bg-slate-50 dark:bg-slate-900">
+                                                    <img src={content.videoUrl} alt="Materi Media" className="max-w-full max-h-[500px] object-contain" />
+                                                </div>
+                                            ) : (
+                                                <div className="aspect-video bg-slate-900 rounded-xl overflow-hidden">
+                                                    <div className="w-full h-full flex items-center justify-center bg-slate-800">
+                                                        <div className="text-center text-white">
+                                                            <span className="material-symbols-outlined text-5xl mb-2">play_circle</span>
+                                                            <p className="text-sm text-slate-400">{content.videoUrl}</p>
+                                                        </div>
                                                     </div>
                                                 </div>
-                                            </div>
+                                            )}
                                         </div>
                                     )}
                                 </div>
