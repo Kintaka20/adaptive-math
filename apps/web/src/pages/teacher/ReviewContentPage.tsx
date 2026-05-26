@@ -269,11 +269,11 @@ export default function ReviewContentPage() {
                                                     <img src={content.videoUrl} alt="Materi Media" className="max-w-full max-h-[500px] object-contain" />
                                                 </div>
                                             ) : (
-                                                <div className="aspect-video bg-slate-900 rounded-xl overflow-hidden relative group">
+                                                <div className="flex justify-center bg-slate-900 rounded-xl overflow-hidden relative group p-4">
                                                     <video
                                                         src={content.videoUrl}
                                                         controls
-                                                        className="w-full h-full object-cover"
+                                                        className="max-w-full max-h-[500px] object-contain mx-auto"
                                                     >
                                                         Browser Anda tidak mendukung tag video.
                                                     </video>

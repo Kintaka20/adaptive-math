@@ -184,12 +184,22 @@ export default function MaterialPage() {
                 {material.videoUrl && (
                     <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 overflow-hidden">
                         {material.videoUrl.match(/\.(jpeg|jpg|gif|png|webp)$/i) || material.videoUrl.includes('/image/upload/') ? (
-                            <img src={material.videoUrl} alt={material.title} className="w-full h-auto object-cover max-h-[500px]" />
+                            <div className="flex justify-center bg-slate-50 dark:bg-slate-900 w-full p-4">
+                                <img src={material.videoUrl} alt={material.title} className="max-w-full max-h-[500px] object-contain mx-auto" />
+                            </div>
                         ) : (
-                            <div className="aspect-video bg-slate-900">
-                                <iframe src={material.videoUrl} className="w-full h-full"
-                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                    allowFullScreen />
+                            <div className="flex justify-center bg-slate-900 w-full">
+                                {material.videoUrl.includes('youtube.com') || material.videoUrl.includes('youtu.be') ? (
+                                    <div className="aspect-video w-full max-w-3xl">
+                                        <iframe src={material.videoUrl} className="w-full h-full"
+                                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                            allowFullScreen />
+                                    </div>
+                                ) : (
+                                    <video src={material.videoUrl} controls className="max-w-full max-h-[500px] object-contain mx-auto">
+                                        Browser Anda tidak mendukung tag video.
+                                    </video>
+                                )}
                             </div>
                         )}
                     </div>
