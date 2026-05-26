@@ -17,7 +17,7 @@ export default function AdminTambahMateriPage() {
         duration: '',
         content: '',
         videoUrl: '',
-        documentUrl: '',
+        pdfUrl: '',
     })
 
     const [isUploadingVideo, setIsUploadingVideo] = useState(false)
@@ -33,6 +33,10 @@ export default function AdminTambahMateriPage() {
             const end = textarea.selectionEnd
             const newText = formData.content.substring(0, start) + latex + formData.content.substring(end)
             setFormData(prev => ({ ...prev, content: newText }))
+            setTimeout(() => {
+                textarea.focus()
+                textarea.setSelectionRange(start + latex.length, start + latex.length)
+            }, 0)
         }
     }
 
@@ -41,8 +45,12 @@ export default function AdminTambahMateriPage() {
         { label: '√', value: '$\\sqrt{}$' },
         { label: '∫', value: '$\\int_{}^{}$' },
         { label: 'π', value: '$\\pi$' },
+        { label: '∞', value: '$\\infty$' },
         { label: 'frac', value: '$\\frac{}{}$' },
         { label: 'x²', value: '$x^{2}$' },
+        { label: 'xₙ', value: '$x_{n}$' },
+        { label: '≤', value: '$\\leq$' },
+        { label: '≥', value: '$\\geq$' },
     ]
 
     const handleSubmit = async () => {
@@ -77,21 +85,17 @@ export default function AdminTambahMateriPage() {
                 <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-slate-200 dark:border-slate-700">
                     <h2 className="font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
                         <span className="material-symbols-outlined text-purple-500">info</span>
-                        Informasi Materi
+                        Informasi Dasar
                     </h2>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="md:col-span-2">
-                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Judul Materi *</label>
-                            <input type="text" value={formData.title} onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                                placeholder="Contoh: Pengenalan Trigonometri"
-                                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900" />
-                        </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                         <div>
                             <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Kelas *</label>
                             <select value={formData.grade} onChange={(e) => setFormData({ ...formData, grade: e.target.value })}
                                 className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900">
                                 <option value="">Pilih Kelas</option>
-                                {grades.map(g => <option key={g} value={g}>Kelas {g}</option>)}
+                                <option value="X">Kelas X</option>
+                                <option value="XI">Kelas XI</option>
+                                <option value="XII">Kelas XII</option>
                             </select>
                         </div>
                         <div>
@@ -102,10 +106,16 @@ export default function AdminTambahMateriPage() {
                                 {chapters.map(c => <option key={c} value={c}>{c}</option>)}
                             </select>
                         </div>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Durasi Baca</label>
-                            <input type="text" value={formData.duration} onChange={(e) => setFormData({ ...formData, duration: e.target.value })}
-                                placeholder="Contoh: 15 menit"
+                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Judul Materi *</label>
+                            <input type="text" value={formData.title} onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900" />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Estimasi Waktu (Menit)</label>
+                            <input type="number" value={formData.duration} onChange={(e) => setFormData({ ...formData, duration: e.target.value })}
                                 className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900" />
                         </div>
                     </div>
@@ -153,8 +163,8 @@ export default function AdminTambahMateriPage() {
                         Lampiran Dokumen (PDF/Word) (Opsional)
                     </label>
                     <div className="flex gap-3">
-                        <input type="url" value={formData.documentUrl}
-                            onChange={(e) => setFormData({ ...formData, documentUrl: e.target.value })}
+                        <input type="url" value={formData.pdfUrl}
+                            onChange={(e) => setFormData({ ...formData, pdfUrl: e.target.value })}
                             placeholder="Tempel URL Dokumen atau upload file..."
                             className="flex-1 px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 focus:border-purple-500 outline-none" />
                         <div className="relative">
@@ -169,7 +179,7 @@ export default function AdminTambahMateriPage() {
                                     setIsUploadingPdf(true)
                                     try {
                                         const res = await uploadApi.uploadImage(file)
-                                        setFormData({ ...formData, documentUrl: res.url })
+                                        setFormData({ ...formData, pdfUrl: res.url })
                                     } catch (error: any) {
                                         alert('Gagal mengunggah dokumen: ' + error.message)
                                     } finally {

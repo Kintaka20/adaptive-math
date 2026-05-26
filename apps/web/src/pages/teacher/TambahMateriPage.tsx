@@ -61,7 +61,7 @@ export default function TambahMateriPage() {
                 chapterId: formData.chapterId,
                 duration: formData.duration || undefined,
                 videoUrl: formData.videoUrl || undefined,
-                documentUrl: formData.documentUrl || undefined,
+                pdfUrl: formData.pdfUrl || undefined,
                 status: asDraft ? 'DRAFT' : 'PUBLISHED',
                 isSystem: false,
             })
@@ -230,8 +230,8 @@ export default function TambahMateriPage() {
                 <div>
                     <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">📄 Lampiran Dokumen (PDF/Word) (Opsional)</label>
                     <div className="flex gap-3">
-                        <input type="url" value={formData.documentUrl}
-                            onChange={(e) => setFormData({ ...formData, documentUrl: e.target.value })}
+                        <input type="url" value={formData.pdfUrl}
+                            onChange={(e) => setFormData({ ...formData, pdfUrl: e.target.value })}
                             placeholder="Tempel URL Dokumen atau upload file..."
                             className="flex-1 px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 focus:border-purple-500 outline-none" />
                         <div className="relative">
@@ -246,7 +246,7 @@ export default function TambahMateriPage() {
                                     setIsUploadingPdf(true)
                                     try {
                                         const res = await uploadApi.uploadImage(file)
-                                        setFormData({ ...formData, documentUrl: res.url })
+                                        setFormData({ ...formData, pdfUrl: res.url })
                                     } catch (error: any) {
                                         alert('Gagal mengunggah dokumen: ' + error.message)
                                     } finally {
