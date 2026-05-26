@@ -42,12 +42,19 @@ router.post('/', upload.single('file'), async (req, res) => {
     
     const resourceType = isDocument ? 'raw' : 'auto'
 
+    const ext = req.file.originalname.split('.').pop()
+    const options: any = {
+      folder: 'adaptive_math',
+      resource_type: resourceType,
+    }
+    
+    if (resourceType === 'raw' && ext) {
+      options.public_id = `${Date.now()}_${Math.random().toString(36).substring(7)}.${ext}`
+    }
+
     // Mengunggah buffer dari memory ke Cloudinary menggunakan stream
     const uploadStream = cloudinary.uploader.upload_stream(
-      {
-        folder: 'adaptive_math',
-        resource_type: resourceType,
-      },
+      options,
       (error, result) => {
         if (error) {
           console.error('Cloudinary upload error:', error)
