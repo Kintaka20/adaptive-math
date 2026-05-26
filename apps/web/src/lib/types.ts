@@ -12,6 +12,7 @@ export interface ApiResponse<T> {
     message?: string
     data: T
     total?: number
+    errors?: { field: string; message: string }[]
 }
 
 export interface User {

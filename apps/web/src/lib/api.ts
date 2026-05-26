@@ -48,7 +48,11 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
             removeToken()
             window.location.href = '/login'
         }
-        throw new ApiError(json.message || 'Terjadi kesalahan', response.status)
+        let errorMessage = json.message || 'Terjadi kesalahan'
+        if (json.errors && Array.isArray(json.errors) && json.errors.length > 0) {
+            errorMessage += ': ' + json.errors.map(e => `${e.field} (${e.message})`).join(', ')
+        }
+        throw new ApiError(errorMessage, response.status)
     }
 
     return json.data

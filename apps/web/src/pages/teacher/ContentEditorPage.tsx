@@ -197,6 +197,10 @@ export default function ContentEditorPage() {
         try {
             if (contentType === 'material') {
                 if (materialMode === 'manual') {
+                    if (materialData.title.trim().length < 3) throw new Error('Judul materi minimal 3 karakter')
+                    if (materialData.content.trim().length < 10) throw new Error('Konten materi minimal 10 karakter')
+                    if (!materialData.chapterId) throw new Error('Bab wajib dipilih')
+
                     const newMat = await materialApi.create({
                         ...materialData,
                         isSystem: false,
@@ -357,7 +361,7 @@ export default function ContentEditorPage() {
                             <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-6 space-y-4">
                                 <div>
                                     <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Judul Materi *</label>
-                                    <input required type="text" value={materialData.title} onChange={(e) => setMaterialData({ ...materialData, title: e.target.value })} className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 focus:border-purple-500 outline-none" />
+                                    <input required minLength={3} type="text" value={materialData.title} onChange={(e) => setMaterialData({ ...materialData, title: e.target.value })} className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 focus:border-purple-500 outline-none" />
                                 </div>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div>
@@ -478,7 +482,7 @@ export default function ContentEditorPage() {
                                         </div>
                                     </div>
 
-                                    <textarea id="material-content-textarea" required rows={12} value={materialData.content} onChange={(e) => setMaterialData({ ...materialData, content: e.target.value })} 
+                                    <textarea id="material-content-textarea" required minLength={10} rows={12} value={materialData.content} onChange={(e) => setMaterialData({ ...materialData, content: e.target.value })} 
                                         className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 focus:border-purple-500 outline-none" 
                                         placeholder="Tuliskan materi di sini... Anda bisa menggunakan Markdown (seperti **tebal** atau ## Heading) dan $...$ untuk LaTeX."></textarea>
                                     <p className="text-xs text-slate-500 mt-2">💡 Tips: Anda dapat menyisipkan gambar langsung ke dalam tulisan menggunakan tombol di atas.</p>
