@@ -269,13 +269,14 @@ export default function ReviewContentPage() {
                                                     <img src={content.videoUrl} alt="Materi Media" className="max-w-full max-h-[500px] object-contain" />
                                                 </div>
                                             ) : (
-                                                <div className="aspect-video bg-slate-900 rounded-xl overflow-hidden">
-                                                    <div className="w-full h-full flex items-center justify-center bg-slate-800">
-                                                        <div className="text-center text-white">
-                                                            <span className="material-symbols-outlined text-5xl mb-2">play_circle</span>
-                                                            <p className="text-sm text-slate-400">{content.videoUrl}</p>
-                                                        </div>
-                                                    </div>
+                                                <div className="aspect-video bg-slate-900 rounded-xl overflow-hidden relative group">
+                                                    <video
+                                                        src={content.videoUrl}
+                                                        controls
+                                                        className="w-full h-full object-cover"
+                                                    >
+                                                        Browser Anda tidak mendukung tag video.
+                                                    </video>
                                                 </div>
                                             )}
                                         </div>
