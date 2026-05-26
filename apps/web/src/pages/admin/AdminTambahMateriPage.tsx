@@ -2,8 +2,7 @@ import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import LatexRenderer from '../../components/LatexRenderer'
 
-const chapters = ['Trigonometri', 'Turunan', 'Integral', 'Limit', 'Aljabar', 'Logaritma', 'Persamaan Kuadrat']
-const grades = ['X', 'XI', 'XII']
+const chapters = ['Trigonometri', 'Turunan', 'Integral', 'Limit', 'Logaritma', 'Persamaan Kuadrat', 'Fungsi Linear']
 
 export default function AdminTambahMateriPage() {
     const navigate = useNavigate()

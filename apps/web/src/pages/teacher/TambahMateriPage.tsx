@@ -23,7 +23,7 @@ export default function TambahMateriPage() {
         duration: '',
         content: '',
         videoUrl: '',
-        documentUrl: '',
+        pdfUrl: '',
         status: 'DRAFT' as 'DRAFT' | 'PUBLISHED',
     })
 
