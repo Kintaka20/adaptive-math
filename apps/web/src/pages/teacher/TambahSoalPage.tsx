@@ -210,9 +210,9 @@ export default function TambahSoalPage() {
                             </label>
                             <div className="flex gap-2">
                                 {[
-                                    { value: 'easy', label: '🟢 Easy', color: 'emerald' },
-                                    { value: 'medium', label: '🟡 Medium', color: 'amber' },
-                                    { value: 'hard', label: '🔴 Hard (HOTS)', color: 'red' },
+                                    { value: 'EASY', label: '🟢 Easy', color: 'emerald' },
+                                    { value: 'MEDIUM', label: '🟡 Medium', color: 'amber' },
+                                    { value: 'HARD', label: '🔴 Hard (HOTS)', color: 'red' },
                                 ].map(d => (
                                     <button
                                         key={d.value}
