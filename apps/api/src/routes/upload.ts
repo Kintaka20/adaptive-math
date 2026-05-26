@@ -34,11 +34,19 @@ router.post('/', upload.single('file'), async (req, res) => {
       })
     }
 
+    // Menentukan tipe resource Cloudinary (gambar/video menggunakan auto, dokumen/PDF menggunakan raw)
+    const isDocument = req.file.mimetype.includes('pdf') || 
+                       req.file.mimetype.includes('msword') || 
+                       req.file.mimetype.includes('wordprocessingml') ||
+                       req.file.mimetype.includes('document')
+    
+    const resourceType = isDocument ? 'raw' : 'auto'
+
     // Mengunggah buffer dari memory ke Cloudinary menggunakan stream
     const uploadStream = cloudinary.uploader.upload_stream(
       {
         folder: 'adaptive_math',
-        resource_type: 'auto',
+        resource_type: resourceType,
       },
       (error, result) => {
         if (error) {
