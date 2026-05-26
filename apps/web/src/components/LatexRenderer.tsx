@@ -39,7 +39,7 @@ export default function LatexRenderer({ content, className = '' }: LatexRenderer
             }
         })
 
-        processed = processed.replace(/!\[([^\]]*)\]\s*\(([^)]+)\)/g, '<img src="$2" alt="$1" class="ai-image" style="max-width:100%;border-radius:0.75rem;margin:0.5rem 0;" />')
+        processed = processed.replace(/!\[([^\]]*)\]\s*\(([^)]+)\)/g, '<img src="$2" alt="$1" class="ai-image" style="max-width:100%;max-height:500px;object-fit:contain;border-radius:0.75rem;margin:1rem auto;display:block;" />')
 
         const lines = processed.split('\n')
         const outputLines: string[] = []
