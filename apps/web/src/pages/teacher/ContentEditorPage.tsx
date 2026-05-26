@@ -54,7 +54,7 @@ export default function ContentEditorPage() {
     const [isUploadingPdf, setIsUploadingPdf] = useState(false)
     const [isUploadingImageContent, setIsUploadingImageContent] = useState(false)
 
-    const [quizData, setQuizData] = useState({
+    const [quizData] = useState({
         title: '',
         description: '',
         chapterId: initialChapterId,
